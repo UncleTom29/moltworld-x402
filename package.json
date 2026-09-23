@@ -1,0 +1,36 @@
+{
+  "name": "moltworld-x402",
+  "version": "1.0.0",
+  "description": "",
+  "type": "module",
+  "main": "src/server.ts",
+  "scripts": {
+    "start": "tsx src/server.ts",
+    "dev": "tsx watch src/server.ts",
+    "test": "vitest run",
+    "test:client": "tsx src/client/testClient.ts",
+    "build": "tsc",
+    "deploy:worker": "bash scripts/deploy.sh worker",
+    "deploy:docker": "bash scripts/deploy.sh docker"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/node": "^26.6.2",
+    "tsx": "^4.23.15",
+    "typescript": "^7.0.2",
+    "vitest": "^5.0.1"
+  },
+  "dependencies": {
+    "@algorandfoundation/algokit-utils": "10.0.0-alpha.42",
+    "@hono/node-server": "^2.1.1",
+    "@x402-avm/extensions": "^2.6.1",
+    "@x402/avm": "^2.27.0",
+    "@x402/core": "^2.27.0",
+    "@x402/fetch": "^2.27.0",
+    "@x402/hono": "^2.27.0",
+    "dotenv": "^18.0.3",
+    "hono": "^4.13.8"
+  }
+}
