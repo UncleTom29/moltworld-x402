@@ -54,7 +54,7 @@ describe("Moltworld x402 Gateway - Free Routes & Modality Filtering", () => {
     expect(favIcoBuf.byteLength).toBeGreaterThan(1000);
   });
 
-  it("GET /health returns 200 OK with 22 enabled models and zero exposed secrets", async () => {
+  it("GET /health returns 200 OK with 38 enabled models and zero exposed secrets", async () => {
     const res = await app.fetch(new Request("http://localhost/health"));
     expect(res.status).toBe(200);
 
@@ -67,8 +67,11 @@ describe("Moltworld x402 Gateway - Free Routes & Modality Filtering", () => {
     expect(body.usdc_asset_id).toBe(USDC_TESTNET_ASA_ID);
     expect(body.pay_to).toBe(config.payToAddress);
     expect(body.tag).toBe("x402-global-challenge");
-    expect(body.enabled_models).toBe(22);
+    expect(body.enabled_models).toBe(38);
     expect(body.models_by_modality.chat).toBe(22);
+    expect(body.models_by_modality.image).toBe(6);
+    expect(body.models_by_modality.voice).toBe(5);
+    expect(body.models_by_modality.video).toBe(5);
     expect(body.uptime_seconds).toBeGreaterThanOrEqual(0);
 
     // Ensure no secrets leaked
@@ -92,16 +95,17 @@ describe("Moltworld x402 Gateway - Free Routes & Modality Filtering", () => {
     setGatewayReady(true);
   });
 
-  it("GET /v1/models returns 200 OK with all 22 enabled models", async () => {
+  it("GET /v1/models returns 200 OK with all 38 enabled models across Chat, Image, Voice & Video", async () => {
     const res = await app.fetch(new Request("http://localhost/v1/models"));
     expect(res.status).toBe(200);
 
     const body = (await res.json()) as any;
     expect(body.object).toBe("list");
     expect(Array.isArray(body.data)).toBe(true);
-    expect(body.data.length).toBe(22);
+    expect(body.data.length).toBe(38);
 
     const slugs = body.data.map((m: any) => m.id);
+    // Chat models
     expect(slugs).toContain("gpt");
     expect(slugs).toContain("gpt-4o");
     expect(slugs).toContain("claude");
@@ -124,6 +128,28 @@ describe("Moltworld x402 Gateway - Free Routes & Modality Filtering", () => {
     expect(slugs).toContain("gemini-3.1-pro");
     expect(slugs).toContain("gpt-5.6-terra");
     expect(slugs).toContain("claude-sonnet-5");
+
+    // Image models
+    expect(slugs).toContain("recraft-v4.1-flash");
+    expect(slugs).toContain("flux-2-pro");
+    expect(slugs).toContain("qwen-image-3");
+    expect(slugs).toContain("seedream-5.0");
+    expect(slugs).toContain("grok-imagine-image");
+    expect(slugs).toContain("recraft-v3");
+
+    // Voice models
+    expect(slugs).toContain("gpt-audio-mini");
+    expect(slugs).toContain("tts-1");
+    expect(slugs).toContain("tts-1-hd");
+    expect(slugs).toContain("gpt-audio");
+    expect(slugs).toContain("eleven-multilingual");
+
+    // Video models
+    expect(slugs).toContain("veo-3.1-fast");
+    expect(slugs).toContain("kling-v3.0-std");
+    expect(slugs).toContain("wan-3.0");
+    expect(slugs).toContain("hailuo-3");
+    expect(slugs).toContain("sora-2-pro");
   });
 
   it("verifies accurate model identity: Claude Sonnet 4.5 and Claude 3 Haiku", async () => {
@@ -137,9 +163,9 @@ describe("Moltworld x402 Gateway - Free Routes & Modality Filtering", () => {
     expect(haiku.name).toBe("Claude 3 Haiku");
   });
 
-  it("guarantees >= 50% profit margin under maximum permitted token limits for all models", () => {
-    // OpenRouter rates (in USD per 1M tokens)
-    const rates: Record<string, { prompt: number; completion: number }> = {
+  it("guarantees >= 50% profit margin on Chat models and > 500% markup on Image, Voice & Video models", () => {
+    // OpenRouter rates for chat models (in USD per 1M tokens)
+    const chatRates: Record<string, { prompt: number; completion: number }> = {
       gpt: { prompt: 0.15, completion: 0.60 },
       "gpt-4o": { prompt: 2.50, completion: 10.00 },
       claude: { prompt: 0.25, completion: 1.25 },
@@ -164,23 +190,56 @@ describe("Moltworld x402 Gateway - Free Routes & Modality Filtering", () => {
       "claude-sonnet-5": { prompt: 2.00, completion: 10.00 },
     };
 
+    // Worst-case upstream generation costs for multimodal models
+    const multimodalCosts: Record<string, number> = {
+      // Image: cost per image generation
+      "recraft-v4.1-flash": 0.007,
+      "flux-2-pro": 0.030,
+      "qwen-image-3": 0.030,
+      "seedream-5.0": 0.035,
+      "grok-imagine-image": 0.040,
+      "recraft-v3": 0.040,
+      // Voice: cost per audio speech generation
+      "gpt-audio-mini": 0.002,
+      "tts-1": 0.015,
+      "tts-1-hd": 0.030,
+      "gpt-audio": 0.033,
+      "eleven-multilingual": 0.030,
+      // Video: cost per 5s video generation
+      "veo-3.1-fast": 0.40,
+      "kling-v3.0-std": 0.42,
+      "wan-3.0": 0.50,
+      "hailuo-3": 0.65,
+      "sora-2-pro": 1.50,
+    };
+
     const models = defaultModelRegistry.getEnabledModels();
-    expect(models.length).toBe(22);
+    expect(models.length).toBe(38);
 
     for (const model of models) {
-      const rate = rates[model.slug];
-      expect(rate).toBeDefined();
-
       const priceUsd = parseFloat(model.price.replace("$", ""));
-      const maxIn = model.limits.maxInputTokens || 4096;
-      const maxOut = model.limits.maxOutputTokens || 1024;
 
-      const maxUpstreamCost = (maxIn * rate.prompt) / 1e6 + (maxOut * rate.completion) / 1e6;
-      const grossMargin = (priceUsd - maxUpstreamCost) / priceUsd;
+      if (model.modality === "chat") {
+        const rate = chatRates[model.slug];
+        expect(rate).toBeDefined();
 
-      // Price MUST exceed worst-case upstream cost by at least 50%
-      expect(grossMargin).toBeGreaterThanOrEqual(0.50);
-      expect(priceUsd).toBeGreaterThanOrEqual(maxUpstreamCost * 1.5);
+        const maxIn = model.limits.maxInputTokens || 4096;
+        const maxOut = model.limits.maxOutputTokens || 1024;
+        const maxUpstreamCost = (maxIn * rate.prompt) / 1e6 + (maxOut * rate.completion) / 1e6;
+        const grossMargin = (priceUsd - maxUpstreamCost) / priceUsd;
+
+        // Chat models: gross margin >= 50%
+        expect(grossMargin).toBeGreaterThanOrEqual(0.50);
+        expect(priceUsd).toBeGreaterThanOrEqual(maxUpstreamCost * 1.5);
+      } else {
+        // Multimodal models: strictly >= 500% markup (Price >= 6.0 * Cost)
+        const cost = multimodalCosts[model.slug];
+        expect(cost).toBeDefined();
+
+        const markup = (priceUsd - cost) / cost;
+        expect(markup).toBeGreaterThanOrEqual(5.0);
+        expect(priceUsd).toBeGreaterThanOrEqual(cost * 6.0);
+      }
     }
   });
 });
@@ -230,10 +289,66 @@ describe("Moltworld x402 Gateway - Payment Gating (HTTP 402) & Fail-Closed Prote
     expect(decoded.accepts[0].amount).toBe("60000"); // $0.06
   });
 
-  it("disabled/unsupported endpoints return 404 and NEVER accept payment (Protection Against Unfulfilled Requests)", async () => {
-    // Kling is disabled because no Kling provider is implemented
+  it("POST /v1/models/flux-2-pro/images/generations returns 402 with $0.20 pricing (200,000 base units)", async () => {
     const res = await app.fetch(
-      new Request("http://localhost/v1/models/kling-v1/videos/generations", {
+      new Request("http://localhost/v1/models/flux-2-pro/images/generations", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          prompt: "Futuristic city with Algorand towers, neon lighting, 8k",
+        }),
+      })
+    );
+
+    expect(res.status).toBe(402);
+    const payReqHeader = res.headers.get("payment-required");
+    expect(payReqHeader).toBeTruthy();
+    const decoded = JSON.parse(Buffer.from(payReqHeader!, "base64").toString("utf8"));
+    expect(decoded.accepts[0].amount).toBe("200000"); // $0.20
+    expect(decoded.accepts[0].payTo).toBe(config.payToAddress);
+  });
+
+  it("POST /v1/models/gpt-audio-mini/audio/speech returns 402 with $0.02 pricing (20,000 base units)", async () => {
+    const res = await app.fetch(
+      new Request("http://localhost/v1/models/gpt-audio-mini/audio/speech", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          input: "Payment received. Commencing audio synthesis.",
+          voice: "alloy",
+        }),
+      })
+    );
+
+    expect(res.status).toBe(402);
+    const payReqHeader = res.headers.get("payment-required");
+    expect(payReqHeader).toBeTruthy();
+    const decoded = JSON.parse(Buffer.from(payReqHeader!, "base64").toString("utf8"));
+    expect(decoded.accepts[0].amount).toBe("20000"); // $0.02
+  });
+
+  it("POST /v1/models/sora-2-pro/videos/generations returns 402 with $10.00 pricing (10,000,000 base units)", async () => {
+    const res = await app.fetch(
+      new Request("http://localhost/v1/models/sora-2-pro/videos/generations", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          prompt: "Cinematic drone shot flying over turquoise ocean waves into sunset",
+          duration: 5,
+        }),
+      })
+    );
+
+    expect(res.status).toBe(402);
+    const payReqHeader = res.headers.get("payment-required");
+    expect(payReqHeader).toBeTruthy();
+    const decoded = JSON.parse(Buffer.from(payReqHeader!, "base64").toString("utf8"));
+    expect(decoded.accepts[0].amount).toBe("10000000"); // $10.00
+  });
+
+  it("disabled/unsupported endpoints return 404 and NEVER accept payment (Protection Against Unfulfilled Requests)", async () => {
+    const res = await app.fetch(
+      new Request("http://localhost/v1/models/unknown-model/videos/generations", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ prompt: "Drone shot" }),
@@ -270,9 +385,9 @@ describe("Moltworld x402 Gateway - Payment Gating (HTTP 402) & Fail-Closed Prote
 
 describe("Moltworld x402 Gateway - Input Validation for All Modalities", () => {
   const chatModel = defaultModelRegistry.getModel("gpt")!;
-  const imageModel = defaultModelRegistry.getModel("flux-schnell")!;
+  const imageModel = defaultModelRegistry.getModel("flux-2-pro")!;
   const voiceModel = defaultModelRegistry.getModel("tts-1")!;
-  const videoModel = defaultModelRegistry.getModel("kling-v1")!;
+  const videoModel = defaultModelRegistry.getModel("kling-v3.0-std")!;
 
   const makeContext = (body: any, contentLength?: string) =>
     ({
@@ -363,7 +478,7 @@ describe("Moltworld x402 Gateway - Input Validation for All Modalities", () => {
     );
     expect(durationTooLong.valid).toBe(false);
     if (!durationTooLong.valid) {
-      expect(durationTooLong.error).toContain("between 1 and 10 seconds");
+      expect(durationTooLong.error).toContain("between 1 and 5 seconds");
     }
 
     const invalidAspect = await validateVideoRequest(

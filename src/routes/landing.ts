@@ -322,7 +322,7 @@ export function renderLandingPage(c: Context): Response {
 
     <section class="hero">
       <h1>One API for AI models and agents.</h1>
-      <p>Access GPT-5.4 Pro, Claude Opus 5.5, Gemini 3.1 Pro, o3 Pro, DeepSeek R1, and 20+ frontier models. Pay per request in USDC on Algorand. Zero subscriptions.</p>
+      <p>Access GPT-5.4 Pro, Claude Opus 5.5, Sora 2 Pro, Flux 2 Pro, Hailuo H3, and 35+ frontier models across Chat, Image, Voice & Video. Pay per request in USDC on Algorand. Zero subscriptions.</p>
       <div class="network-pill">
         Settlement: <strong>Algorand USDC</strong> (ASA: ${usdcAsa}) via GoPlausible Facilitator
       </div>
@@ -332,9 +332,9 @@ export function renderLandingPage(c: Context): Response {
     <div class="tabs">
       <button class="tab-btn active" onclick="filterModality('all', this)">All Active (${models.length})</button>
       <button class="tab-btn" onclick="filterModality('chat', this)">Chat (${models.filter(m => m.modality === 'chat').length})</button>
-      <span style="font-family: var(--mono); font-size: 0.75rem; color: #8e95a5; display: inline-flex; align-items: center; margin-left: 0.5rem;">
-        Image, Voice & Video endpoints fail-closed until upstream keys verified
-      </span>
+      <button class="tab-btn" onclick="filterModality('image', this)">Image (${models.filter(m => m.modality === 'image').length})</button>
+      <button class="tab-btn" onclick="filterModality('voice', this)">Voice (${models.filter(m => m.modality === 'voice').length})</button>
+      <button class="tab-btn" onclick="filterModality('video', this)">Video (${models.filter(m => m.modality === 'video').length})</button>
     </div>
 
     <div class="models-grid" id="modelsGrid">
@@ -388,18 +388,32 @@ export function renderLandingPage(c: Context): Response {
 <span class="hl-keyword">const</span> client = <span class="hl-keyword">new</span> x402Client().register(<span class="hl-string">"algorand:*"</span>, <span class="hl-keyword">new</span> ExactAvmScheme(signer));
 <span class="hl-keyword">const</span> fetchWithPay = wrapFetchWithPayment(globalThis.fetch, client);
 
-<span class="hl-comment">// Example 1: Claude Sonnet 4.5 ($0.06 USDC)</span>
-<span class="hl-keyword">const</span> claudeRes = <span class="hl-keyword">await</span> fetchWithPay(<span class="hl-string">"${config.publicDomain}/v1/models/claude-sonnet/chat/completions"</span>, {
+<span class="hl-comment">// 2. Chat: Claude Sonnet 4.5 ($0.06 USDC)</span>
+<span class="hl-keyword">const</span> chatRes = <span class="hl-keyword">await</span> fetchWithPay(<span class="hl-string">"${config.publicDomain}/v1/models/claude-sonnet/chat/completions"</span>, {
   method: <span class="hl-string">"POST"</span>,
   headers: { <span class="hl-string">"Content-Type"</span>: <span class="hl-string">"application/json"</span> },
   body: JSON.stringify({ messages: [{ role: <span class="hl-string">"user"</span>, content: <span class="hl-string">"Explain Algorand consensus."</span> }] })
 });
 
-<span class="hl-comment">// Example 2: Gemini 2.5 Flash Lite ($0.01 USDC)</span>
-<span class="hl-keyword">const</span> geminiRes = <span class="hl-keyword">await</span> fetchWithPay(<span class="hl-string">"${config.publicDomain}/v1/models/gemini-lite/chat/completions"</span>, {
+<span class="hl-comment">// 3. Image: Flux 2 Pro ($0.20 USDC)</span>
+<span class="hl-keyword">const</span> imgRes = <span class="hl-keyword">await</span> fetchWithPay(<span class="hl-string">"${config.publicDomain}/v1/models/flux-2-pro/images/generations"</span>, {
   method: <span class="hl-string">"POST"</span>,
   headers: { <span class="hl-string">"Content-Type"</span>: <span class="hl-string">"application/json"</span> },
-  body: JSON.stringify({ messages: [{ role: <span class="hl-string">"user"</span>, content: <span class="hl-string">"Hello from autonomous agent"</span> }] })
+  body: JSON.stringify({ prompt: <span class="hl-string">"Futuristic Algorand metropolis at dusk, photorealistic 8k"</span> })
+});
+
+<span class="hl-comment">// 4. Voice: GPT Audio Mini ($0.02 USDC)</span>
+<span class="hl-keyword">const</span> voiceRes = <span class="hl-keyword">await</span> fetchWithPay(<span class="hl-string">"${config.publicDomain}/v1/models/gpt-audio-mini/audio/speech"</span>, {
+  method: <span class="hl-string">"POST"</span>,
+  headers: { <span class="hl-string">"Content-Type"</span>: <span class="hl-string">"application/json"</span> },
+  body: JSON.stringify({ input: <span class="hl-string">"Payment settled on Algorand. Commencing audio stream."</span>, voice: <span class="hl-string">"alloy"</span> })
+});
+
+<span class="hl-comment">// 5. Video: Sora 2 Pro ($10.00 USDC)</span>
+<span class="hl-keyword">const</span> videoRes = <span class="hl-keyword">await</span> fetchWithPay(<span class="hl-string">"${config.publicDomain}/v1/models/sora-2-pro/videos/generations"</span>, {
+  method: <span class="hl-string">"POST"</span>,
+  headers: { <span class="hl-string">"Content-Type"</span>: <span class="hl-string">"application/json"</span> },
+  body: JSON.stringify({ prompt: <span class="hl-string">"Cinematic drone pan over misty pine mountains at golden hour"</span>, duration: 5 })
 });</code></pre>
 
     <div class="nav-links">

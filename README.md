@@ -5,11 +5,11 @@ Pay per request in USDC on Algorand. Zero subscriptions, zero prepaid credits.
 
 - **Public Domain**: [https://moltworld.xyz](https://moltworld.xyz)
 - **Deployment**: Contabo VPS (Ubuntu 22.04 LTS / Debian 12) + Cloudflare Reverse Proxy / DNS
-- **Modalities**: Chat Completions (Active in production); Image, Voice & Video (Pre-architected, failing closed until direct upstream keys verified)
-- **Active Models**: 10 production-ready models across OpenAI, Anthropic, Google, DeepSeek, and Meta via OpenRouter
+- **Modalities**: Multimodal: Chat Completions (22 models), Image Generation (6 models), Voice Speech Synthesis (5 models), and Video Synthesis (5 models)
+- **Active Models**: 38 production-ready models across OpenAI, Anthropic, Google, DeepSeek, Meta, Black Forest Labs, Recraft, ByteDance, xAI, MiniMax, and Alibaba via OpenRouter
 - **Payment Scheme**: Algorand x402 exact micropayments via GoPlausible facilitator
 - **Challenge Tag**: `x402-global-challenge`
-- **Margin Guarantee**: Mathematical >= 50% gross margin under worst-case maximum token capacity
+- **Margin & Markup Guarantees**: Strictly > 500% markup on all Image, Voice & Video models ($\ge 6\times$ upstream cost, $> 83.3\%$ gross profit margin) and $\ge 50\%$ gross margin under worst-case maximum token capacity for all Chat models
 
 ---
 
@@ -22,8 +22,9 @@ Every paid endpoint is:
 2. **Cataloged in GoPlausible Bazaar**: Discovered automatically by agents via Bazaar discovery extensions.
 3. **Attributed to the Global x402 Challenge**: Tagged with `x402-global-challenge` on every route.
 4. **Settled under a unified address**: Volume aggregates under one merchant account under `moltworld.xyz`.
-5. **Guaranteed Margin**: Fixed prices are calculated against worst-case maximum token usage to strictly guarantee >= 50% profit margin over upstream provider costs.
-6. **Fail-Closed Architecture**: Unsupported providers and endpoints without working upstream keys are disabled, never advertised, and never accept payment. If facilitator initialization fails, the gateway immediately fails closed (503 Service Unavailable).
+5. **Strict > 500% Markup on Multimodal Models**: Every Image, Voice, and Video model is priced with $> 500\%$ markup over upstream generation costs (yielding $> 83.3\%$ profit margin).
+6. **Guaranteed Margin on Chat**: Fixed chat prices guarantee $\ge 50\%$ gross profit margin under worst-case 100% token usage.
+7. **Fail-Closed Architecture**: Unsupported providers and endpoints without working upstream keys are disabled, never advertised, and never accept payment. If facilitator initialization fails, the gateway immediately fails closed (503 Service Unavailable).
 
 ---
 
@@ -51,8 +52,9 @@ Moltworld operates as a **Composite Entry** under the single root domain `moltwo
                   ▼                                         ▼
              Free Routes                               Paid Routes
            GET / (Landing)               POST /v1/models/:model/chat/completions
-           GET /health (Fail-Closed)
-           GET /v1/models (Catalog)
+           GET /health (Fail-Closed)     POST /v1/models/:model/images/generations
+           GET /v1/models (Catalog)      POST /v1/models/:model/audio/speech
+                                         POST /v1/models/:model/videos/generations
                                                             │
                                                             ▼
                                                 x402 HTTP Resource Server
@@ -75,7 +77,7 @@ Moltworld operates as a **Composite Entry** under the single root domain `moltwo
 
 ## 3. Active Model Catalog & Margin Guarantees
 
-All 22 active models route directly to verified OpenRouter upstream endpoints. Maximum token capacities are capped to guarantee a **minimum 50% gross margin** (and typically >80%) even if the client consumes 100% of the input and output token allowances:
+### Chat Models (22 Active Models — $\ge 50\%$ Margin Guarantee)
 
 | Model ID | Public Display Name | Upstream Model ID | Price (USDC) | Max In | Max Out | Worst-Case Cost | Gross Margin |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
@@ -102,10 +104,28 @@ All 22 active models route directly to verified OpenRouter upstream endpoints. M
 | `deepseek` | DeepSeek V3 | `deepseek/deepseek-chat` | **$0.01** | 4,096 | 2,048 | $0.00313 | **68.7%** |
 | `llama` | Llama 3.3 70B | `meta-llama/llama-3.3-70b-instruct` | **$0.01** | 4,096 | 2,048 | $0.00107 | **89.3%** |
 
-### Fail-Closed Modalities (Image, Voice, Video)
-- Unsupported providers (`elevenlabs`, `kling`, `luma`, `minimax`) are set to `enabled: false`.
-- Endpoints return **HTTP 404** with zero x402 payment requirements. Clients can **never** be charged for an unfulfilled request.
-- OpenRouter image generation uses the modern `POST /api/v1/images` endpoint and will be enabled once upstream image endpoints are verified.
+### Multimodal Models (16 Active Models — Strictly > 500% Markup)
+
+$$\text{Markup } \% = \frac{\text{Moltworld Price} - \text{Worst-Case Upstream Cost}}{\text{Worst-Case Upstream Cost}} \times 100\% \quad (\ge 500\% \iff \text{Price} \ge 6\times \text{Cost})$$
+
+| Modality | Model ID | Public Display Name | Upstream Model ID | Upstream Cost | Moltworld Price | Markup % | Gross Margin |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| **Image** | `recraft-v4.1-flash` | Recraft V4.1 Flash | `recraft/recraft-v4.1-flash` | $0.007 / img | **$0.05** | **+614%** | 86.0% |
+| **Image** | `flux-2-pro` | FLUX.2 Pro | `black-forest-labs/flux.2-pro` | $0.030 / img | **$0.20** | **+567%** | 85.0% |
+| **Image** | `qwen-image-3` | Qwen Image 3 | `qwen/qwen-image-3` | $0.030 / img | **$0.20** | **+567%** | 85.0% |
+| **Image** | `seedream-5.0` | ByteDance Seedream 5.0 | `bytedance-seed/seedream-5-0-lite` | $0.035 / img | **$0.25** | **+614%** | 86.0% |
+| **Image** | `grok-imagine-image` | Grok Imagine Image 2.0 | `x-ai/grok-imagine-image-2.0` | $0.040 / img | **$0.25** | **+525%** | 84.0% |
+| **Image** | `recraft-v3` | Recraft V3 | `recraft/recraft-v3` | $0.040 / img | **$0.25** | **+525%** | 84.0% |
+| **Voice** | `gpt-audio-mini` | GPT Audio Mini | `openai/gpt-audio-mini` | $0.002 / req | **$0.02** | **+900%** | 90.0% |
+| **Voice** | `tts-1` | OpenAI TTS-1 | `tts-1` | $0.015 / req | **$0.10** | **+567%** | 85.0% |
+| **Voice** | `tts-1-hd` | OpenAI TTS-1 HD | `tts-1-hd` | $0.030 / req | **$0.20** | **+567%** | 85.0% |
+| **Voice** | `gpt-audio` | GPT Audio | `openai/gpt-audio` | $0.033 / req | **$0.20** | **+506%** | 83.5% |
+| **Voice** | `eleven-multilingual` | ElevenLabs Multilingual V2 | `eleven_multilingual_v2` | $0.030 / req | **$0.20** | **+567%** | 85.0% |
+| **Video** | `veo-3.1-fast` | Google Veo 3.1 Fast | `google/veo-3.1-fast` | $0.40 / 5s | **$2.50** | **+525%** | 84.0% |
+| **Video** | `kling-v3.0-std` | Kling Video V3.0 | `kwaivgi/kling-v3.0-std` | $0.42 / 5s | **$2.75** | **+555%** | 84.7% |
+| **Video** | `wan-3.0` | Alibaba Wan 3.0 | `alibaba/wan-3.0` | $0.50 / 5s | **$3.00** | **+500%** | 83.3% |
+| **Video** | `hailuo-3` | MiniMax Hailuo H3 | `minimax/hailuo-3` | $0.65 / 5s | **$4.00** | **+515%** | 83.8% |
+| **Video** | `sora-2-pro` | OpenAI Sora 2 Pro | `openai/sora-2-pro` | $1.50 / 5s | **$10.00** | **+567%** | 85.0% |
 
 ---
 
