@@ -4,26 +4,30 @@
 Pay per request in USDC on Algorand. Zero subscriptions, zero prepaid credits.
 
 - **Public Domain**: [https://moltworld.xyz](https://moltworld.xyz)
-- **Modalities Supported**: Chat Completions, Image Generation, Voice/Speech Synthesis, Video Generation
-- **Models Available**: 19 models across OpenAI, Anthropic, Google, DeepSeek, Meta, Black Forest Labs, Recraft, ElevenLabs, Kling, Luma, and MiniMax
+- **Deployment**: Contabo VPS (Ubuntu 22.04 LTS / Debian 12) + Cloudflare Reverse Proxy / DNS
+- **Modalities**: Chat Completions (Active in production); Image, Voice & Video (Pre-architected, failing closed until direct upstream keys verified)
+- **Active Models**: 10 production-ready models across OpenAI, Anthropic, Google, DeepSeek, and Meta via OpenRouter
 - **Payment Scheme**: Algorand x402 exact micropayments via GoPlausible facilitator
 - **Challenge Tag**: `x402-global-challenge`
+- **Margin Guarantee**: Mathematical >= 50% gross margin under worst-case maximum token capacity
 
 ---
 
 ## 1. What Moltworld Is
 
-Moltworld is an OpenRouter-style multimodal AI gateway powered by HTTP 402 (`x402`) micropayments on the Algorand blockchain. Clients and autonomous agents select a model across **Chat**, **Image**, **Voice**, or **Video**, submit an OpenAI-compatible request payload, pay a fixed per-request USDC fee via the GoPlausible facilitator, and immediately receive the generated output.
+Moltworld is an OpenRouter-style AI model gateway powered by HTTP 402 (`x402`) micropayments on the Algorand blockchain. Clients and autonomous agents select a model, submit a standard OpenAI-compatible JSON payload, pay a fixed per-request USDC fee via the GoPlausible facilitator, and immediately receive the generated output.
 
 Every paid endpoint is:
 1. **Protected by x402**: Requests without valid payment return `402 Payment Required` with Base64 payment requirements.
 2. **Cataloged in GoPlausible Bazaar**: Discovered automatically by agents via Bazaar discovery extensions.
 3. **Attributed to the Global x402 Challenge**: Tagged with `x402-global-challenge` on every route.
 4. **Settled under a unified address**: Volume aggregates under one merchant account under `moltworld.xyz`.
+5. **Guaranteed Margin**: Fixed prices are calculated against worst-case maximum token usage to strictly guarantee >= 50% profit margin over upstream provider costs.
+6. **Fail-Closed Architecture**: Unsupported providers and endpoints without working upstream keys are disabled, never advertised, and never accept payment. If facilitator initialization fails, the gateway immediately fails closed (503 Service Unavailable).
 
 ---
 
-## 2. Architecture
+## 2. Architecture & Production Flow
 
 Moltworld operates as a **Composite Entry** under the single root domain `moltworld.xyz`:
 
@@ -31,20 +35,24 @@ Moltworld operates as a **Composite Entry** under the single root domain `moltwo
                            Client / Autonomous Agent
                                        │
                                        ▼
-                           Cloudflare (moltworld.xyz)
-                                       │
+                   Cloudflare Edge Proxy (DNS + WAF + SSL)
+                                       │ (Full Strict HTTPS)
                                        ▼
-                          Hono Web Server & Middleware
-                       (CORS, Rate Limiter, Request ID,
-                         no-cache headers for /v1/*)
+                     Contabo VPS (Port 80/443 - UFW)
+                                       │
+                    Nginx Reverse Proxy (Real IP restore)
+                    (CF-Connecting-IP, no-cache on /v1/*)
+                                       │ (HTTP 127.0.0.1:3000)
+                                       ▼
+                         Moltworld Gateway Daemon
+                      (Hono + Node.js 20 systemd unit)
                                        │
                   ┌────────────────────┴────────────────────┐
                   ▼                                         ▼
              Free Routes                               Paid Routes
            GET / (Landing)               POST /v1/models/:model/chat/completions
-           GET /health                   POST /v1/models/:model/images/generations
-           GET /v1/models                POST /v1/models/:model/audio/speech
-           GET /v1/models?modality=...   POST /v1/models/:model/videos/generations
+           GET /health (Fail-Closed)
+           GET /v1/models (Catalog)
                                                             │
                                                             ▼
                                                 x402 HTTP Resource Server
@@ -57,7 +65,7 @@ Moltworld operates as a **Composite Entry** under the single root domain `moltwo
                                                             │
                                                             ▼
                                                   AI Provider Abstraction
-                                            (OpenRouter / Direct Adapters / Mock)
+                                            (OpenRouter Direct / Fail-Closed)
                                                             │
                                                             ▼
                                                  Standard Normalized JSON
@@ -65,275 +73,126 @@ Moltworld operates as a **Composite Entry** under the single root domain `moltwo
 
 ---
 
-## 3. Endpoints & Model Catalog
+## 3. Active Model Catalog & Margin Guarantees
 
-### Modality Endpoints
+All 10 active models route directly to verified OpenRouter upstream endpoints. Maximum token capacities are capped to guarantee a **minimum 50% gross margin** even if the client consumes 100% of the input and output token allowances:
 
-| Modality | Endpoint | Example Models | Price Range |
-| :--- | :--- | :--- | :--- |
-| **Chat** | `POST /v1/models/:model/chat/completions` | `gpt`, `claude`, `gemini`, `deepseek` | $0.01 – $0.06 |
-| **Image** | `POST /v1/models/:model/images/generations` | `flux-schnell`, `flux-dev`, `dall-e-3` | $0.02 – $0.05 |
-| **Voice** | `POST /v1/models/:model/audio/speech` | `tts-1`, `tts-1-hd`, `eleven-multilingual` | $0.02 – $0.05 |
-| **Video** | `POST /v1/models/:model/videos/generations` | `kling-v1`, `luma-ray`, `minimax-video` | $0.20 – $0.25 |
+| Model ID | Public Display Name | Upstream Model ID | Price (USDC) | Max In | Max Out | Worst-Case Cost | Gross Margin |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| `gpt` | GPT-4o Mini | `openai/gpt-4o-mini` | **$0.03** | 4,096 | 2,048 | $0.00184 | **93.9%** |
+| `gpt-4o` | GPT-4o | `openai/gpt-4o` | **$0.05** | 4,096 | 1,024 | $0.02048 | **59.0%** |
+| `claude` | Claude 3 Haiku | `anthropic/claude-3-haiku` | **$0.03** | 4,096 | 2,048 | $0.00358 | **88.1%** |
+| `claude-sonnet` | Claude Sonnet 4.5 | `anthropic/claude-sonnet-4.5` | **$0.06** | 4,096 | 1,024 | $0.02765 | **53.9%** |
+| `gemini` | Gemini 2.5 Flash | `google/gemini-2.5-flash` | **$0.02** | 4,096 | 2,048 | $0.00635 | **68.3%** |
+| `gemini-lite` | Gemini 2.5 Flash Lite | `google/gemini-2.5-flash-lite` | **$0.01** | 4,096 | 2,048 | $0.00123 | **87.7%** |
+| `gemini-pro` | Gemini 2.5 Pro | `google/gemini-2.5-pro` | **$0.04** | 4,096 | 1,024 | $0.01536 | **61.6%** |
+| `deepseek` | DeepSeek V3 | `deepseek/deepseek-chat` | **$0.01** | 4,096 | 2,048 | $0.00313 | **68.7%** |
+| `deepseek-r1` | DeepSeek R1 | `deepseek/deepseek-r1` | **$0.02** | 4,096 | 2,048 | $0.00799 | **60.1%** |
+| `llama` | Llama 3.3 70B | `meta-llama/llama-3.3-70b-instruct` | **$0.01** | 4,096 | 2,048 | $0.00107 | **89.3%** |
 
-### Complete 19-Model Catalog
-
-#### Chat Models (9)
-- `gpt` (GPT-4o Mini) — **$0.03** (30,000 micro-USDC)
-- `gpt-4o` (GPT-4o Omni) — **$0.05** (50,000 micro-USDC)
-- `claude` (Claude 3.5 Haiku) — **$0.03** (30,000 micro-USDC)
-- `claude-sonnet` (Claude 3.7 Sonnet) — **$0.06** (60,000 micro-USDC)
-- `gemini` (Gemini 2.0 Flash) — **$0.02** (20,000 micro-USDC)
-- `gemini-pro` (Gemini 2.0 Pro) — **$0.04** (40,000 micro-USDC)
-- `deepseek` (DeepSeek V3) — **$0.01** (10,000 micro-USDC)
-- `deepseek-r1` (DeepSeek R1) — **$0.02** (20,000 micro-USDC)
-- `llama` (Llama 3.3 70B) — **$0.01** (10,000 micro-USDC)
-
-#### Image Generation Models (4)
-- `flux-schnell` (FLUX.1 Schnell) — **$0.02** (20,000 micro-USDC)
-- `flux-dev` (FLUX.1 Dev) — **$0.04** (40,000 micro-USDC)
-- `dall-e-3` (DALL-E 3) — **$0.05** (50,000 micro-USDC)
-- `recraft-v3` (Recraft V3) — **$0.04** (40,000 micro-USDC)
-
-#### Voice / Speech Synthesis Models (3)
-- `tts-1` (OpenAI TTS-1) — **$0.02** (20,000 micro-USDC)
-- `tts-1-hd` (OpenAI TTS-1 HD) — **$0.03** (30,000 micro-USDC)
-- `eleven-multilingual` (ElevenLabs Multilingual V2) — **$0.05** (50,000 micro-USDC)
-
-#### Video Generation Models (3)
-- `kling-v1` (Kling AI V1.5) — **$0.25** (250,000 micro-USDC)
-- `luma-ray` (Luma Ray-2) — **$0.25** (250,000 micro-USDC)
-- `minimax-video` (MiniMax Video-01) — **$0.20** (200,000 micro-USDC)
+### Fail-Closed Modalities (Image, Voice, Video)
+- Unsupported providers (`elevenlabs`, `kling`, `luma`, `minimax`) are set to `enabled: false`.
+- Endpoints return **HTTP 404** with zero x402 payment requirements. Clients can **never** be charged for an unfulfilled request.
+- OpenRouter image generation uses the modern `POST /api/v1/images` endpoint and will be enabled once upstream image endpoints are verified.
 
 ---
 
-## 4. Local Development
+## 4. Deploying to Contabo VPS (with Cloudflare DNS)
 
-### Prerequisites
+See [`deploy/README.md`](deploy/README.md) for full instructions.
 
-- Node.js >= 20.0.0
-- `pnpm` (recommended) or `npm`
-
-### Installation & Run
+### Quick Start on Contabo VPS (Ubuntu/Debian):
 
 ```bash
-# Clone and enter repo
-cd moltworld-x402
+# 1. SSH into Contabo VPS as root
+ssh root@<YOUR_CONTABO_VPS_IP>
 
+# 2. Clone repository to /opt/moltworld-x402
+git clone https://github.com/UncleTom29/moltworld-x402.git /opt/moltworld-x402
+cd /opt/moltworld-x402
+
+# 3. Run automated provisioner (Node.js 20, pnpm, Nginx, UFW, systemd)
+bash deploy/contabo-setup.sh
+
+# 4. Edit production environment variables
+nano /opt/moltworld-x402/.env
+# Set OPENROUTER_API_KEY, AVM_ADDRESS, and ALGORAND_NETWORK=mainnet
+
+# 5. Restart service
+systemctl restart moltworld
+
+# 6. Verify health
+curl -s http://127.0.0.1:3000/health | jq .
+```
+
+### Cloudflare Configuration:
+1. **DNS**: Add A record for `@` and `www` pointing to your Contabo VPS IP with **Proxy status: Proxied (Orange Cloud)**.
+2. **SSL/TLS**: Set encryption mode to **Full (Strict)**.
+3. **Origin Certificate**: Generate a Cloudflare Origin Certificate and install at `/etc/ssl/certs/moltworld.pem` and `/etc/ssl/private/moltworld.key`.
+
+---
+
+## 5. Local Development & Testing
+
+```bash
 # Install dependencies
 pnpm install
 
-# Copy environment template
-cp .env.example .env
-
-# Run local development server (with auto-reload)
-pnpm dev
-
-# Run automated test suite (20 tests covering all modalities)
-pnpm test
-
 # Build TypeScript
 pnpm build
+
+# Run automated tests (19 tests covering profit margins, fail-closed guards, 402 headers)
+pnpm test
+
+# Run local development server
+pnpm dev
 ```
 
 ---
 
-## 5. Deployment Options
+## 6. Test Client & Testnet Verification Flow
 
-Moltworld provides two complete deployment configurations:
+Before deploying to Mainnet, verify end-to-end payment with the GoPlausible facilitator on Algorand Testnet.
 
-### Option A: Cloudflare Workers (Edge Serverless)
+### Testnet Requirements:
+1. Payer account holding Testnet ALGO (for transaction fees and minimum balance).
+2. Payer account opted in to Testnet USDC (`10458941`).
+3. Payer account holding Testnet USDC.
+4. Merchant account (`AVM_ADDRESS`) opted in to Testnet USDC.
 
-Deploy directly to Cloudflare's edge network under `moltworld.xyz/*` using the configured `wrangler.jsonc` file.
+Run the test client with cheap models to preserve credits:
 
-1. Ensure `wrangler` is logged in:
-   ```bash
-   npx wrangler login
-   npx wrangler whoami
-   ```
-2. Set production secrets in Cloudflare Workers:
-   ```bash
-   npx wrangler secret put AVM_ADDRESS
-   npx wrangler secret put OPENROUTER_API_KEY
-   ```
-3. Deploy to Cloudflare:
-   ```bash
-   pnpm run deploy:worker
-   # or: bash scripts/deploy.sh worker
-   ```
-
-### Option B: Docker (Containerized VPS / Server)
-
-Deploy using the multi-stage Alpine `Dockerfile` and `docker-compose.yml`.
-
-1. Ensure Docker is running.
-2. Build and run container:
-   ```bash
-   pnpm run deploy:docker
-   # or: bash scripts/deploy.sh docker
-   ```
-3. Inspect running service:
-   ```bash
-   docker ps
-   curl http://localhost:3000/health
-   ```
-
----
-
-## 6. Environment Variables
-
-| Variable | Description | Default | Required in Production |
-| :--- | :--- | :--- | :--- |
-| `ALGORAND_NETWORK` | `testnet` or `mainnet` | `testnet` | Yes |
-| `AVM_ADDRESS` | Merchant Algorand address receiving USDC | Default testnet address | **Yes (on Mainnet)** |
-| `FACILITATOR_URL` | GoPlausible facilitator URL | `https://facilitator.goplausible.xyz` | No |
-| `PUBLIC_DOMAIN` | Production root domain | `https://moltworld.xyz` | No |
-| `PORT` | Local server port | `3000` | No |
-| `OPENROUTER_API_KEY` | Upstream OpenRouter API Key | — | Optional |
-| `OPENAI_API_KEY` | Upstream OpenAI API Key | — | Optional |
-| `ELEVENLABS_API_KEY` | Upstream ElevenLabs API Key | — | Optional |
-| `MOCK_PROVIDERS` | Simulate responses for offline testing (`true`/`false`) | `false` | No |
-| `AVM_CLIENT_PRIVATE_KEY`| 64-byte Base64 Ed25519 key for test client | — | No |
+```bash
+# Test Gemini 2.5 Flash Lite ($0.01 USDC)
+AVM_CLIENT_PRIVATE_KEY=<BASE64_KEY> pnpm test:client --model=gemini-lite
+```
 
 ---
 
 ## 7. Example Unpaid Request (HTTP 402)
 
-Send an unpaid request to any multimodal route:
-
 ```bash
-# Chat request
-curl -i -X POST https://moltworld.xyz/v1/models/gpt/chat/completions \
+curl -i -X POST https://moltworld.xyz/v1/models/claude-sonnet/chat/completions \
   -H "Content-Type: application/json" \
-  -d '{"messages":[{"role":"user","content":"Explain Algorand"}]}'
-
-# Image generation request
-curl -i -X POST https://moltworld.xyz/v1/models/flux-schnell/images/generations \
-  -H "Content-Type: application/json" \
-  -d '{"prompt":"Futuristic neon skyline at dusk","size":"1024x1024"}'
-
-# Voice synthesis request
-curl -i -X POST https://moltworld.xyz/v1/models/tts-1/audio/speech \
-  -H "Content-Type: application/json" \
-  -d '{"input":"Welcome to Moltworld","voice":"alloy"}'
-
-# Video generation request
-curl -i -X POST https://moltworld.xyz/v1/models/kling-v1/videos/generations \
-  -H "Content-Type: application/json" \
-  -d '{"prompt":"Drone flying over ocean waves","duration":5}'
+  -d '{"messages":[{"role":"user","content":"Explain Algorand consensus"}]}'
 ```
 
-### HTTP 402 Response Headers & Body
+Returns:
 
 ```http
 HTTP/1.1 402 Payment Required
-Content-Type: application/json
-Access-Control-Expose-Headers: Payment-Required, Payment-Response, x-request-id
+Payment-Required: eyJ4NDAyVmVyc2lvbiI6MiwiZXJyb3IiOiJQYXltZW50IHJlcXVpcmVkIiw...
 Cache-Control: no-store, no-cache, must-revalidate, proxy-revalidate
-Payment-Required: eyJ4NDAyVmVyc2lvbiI6MiwiZXJyb3IiOiJQYXltZW50IHJlcXVpcmVkIiwicmVzb3VyY2UiOnsidXJsIjoiaHR0cHM6Ly9tb2x0d29ybGQueHl6L3YxL21vZGVscy9mbHV4LXNjaG5lbGwvaW1hZ2VzL2dlbmVyYXRpb25zIi4uLn0=
 
 {}
 ```
 
-### Decoded Payment Requirements
-
-```json
-{
-  "x402Version": 2,
-  "error": "Payment required",
-  "resource": {
-    "url": "https://moltworld.xyz/v1/models/flux-schnell/images/generations",
-    "description": "FLUX.1 Schnell high-speed image generation through Moltworld: generate high-fidelity images in seconds.",
-    "mimeType": "application/json"
-  },
-  "accepts": [
-    {
-      "scheme": "exact",
-      "network": "algorand:SGO1GKSzyE7IEPItTxCByw9x8FmnrCDexi9/cOUJOiI=",
-      "amount": "20000",
-      "asset": "10458941",
-      "payTo": "XFYEO7VOP3KX2YHZLQBQLM6L565IQJWYZGNG36OF44GYW5FF2FQXURFR7Q",
-      "maxTimeoutSeconds": 300,
-      "extra": {
-        "asset": "10458941",
-        "tag": "x402-global-challenge"
-      }
-    }
-  ],
-  "extensions": {
-    "bazaar": { ... }
-  }
-}
-```
-
 ---
 
-## 8. Example Paying Client (Multimodal)
+## 8. CI/CD & Production Readiness
 
-Using official `@x402/fetch` and `@x402/avm`:
-
-```typescript
-import { wrapFetchWithPayment, x402Client, decodePaymentResponseHeader } from "@x402/fetch";
-import { ExactAvmScheme, toClientAvmSigner } from "@x402/avm";
-
-// 1. Initialize client signer from Base64 64-byte Ed25519 private key
-const signer = toClientAvmSigner(process.env.AVM_CLIENT_PRIVATE_KEY!);
-
-// 2. Register Algorand exact scheme
-const client = new x402Client().register("algorand:*", new ExactAvmScheme(signer));
-
-// 3. Wrap fetch
-const fetchWithPay = wrapFetchWithPayment(globalThis.fetch, client);
-
-// 4. Send request (handles 402, signing, and settlement automatically)
-const response = await fetchWithPay("https://moltworld.xyz/v1/models/flux-schnell/images/generations", {
-  method: "POST",
-  headers: { "Content-Type": "application/json" },
-  body: JSON.stringify({
-    prompt: "Cyberpunk city with blockchain data conduits glowing in the rain",
-    size: "1024x1024",
-  }),
-});
-
-// 5. Inspect settlement details
-const paymentResponse = response.headers.get("payment-response");
-if (paymentResponse) {
-  const settlement = decodePaymentResponseHeader(paymentResponse);
-  console.log("Settled on Algorand! TxID:", settlement.txId);
-}
-
-// 6. Access output
-const data = await response.json();
-console.log("Generated Image URL:", data.data[0].url);
-```
-
-### Running the Included Test Client
-
-The repository includes a ready-to-run multimodal client:
-
-```bash
-# Test Chat inference
-pnpm test:client --modality=chat --model=gpt
-
-# Test Image generation
-pnpm test:client --modality=image --model=flux-schnell
-
-# Test Voice synthesis
-pnpm test:client --modality=voice --model=tts-1
-
-# Test Video generation
-pnpm test:client --modality=video --model=kling-v1
-```
-
----
-
-## 9. Bazaar & Competition Configuration
-
-1. **Facilitator**: Built against the official GoPlausible facilitator (`https://facilitator.goplausible.xyz`).
-2. **Resource Server Extension**: Registers `bazaarResourceServerExtension` from `@x402-avm/extensions`.
-3. **Discovery Metadata**: Every endpoint includes declared input/output schemas and examples via `declareDiscoveryExtension`.
-4. **Challenge Attribution Tag**: Every route embeds `extra: { tag: "x402-global-challenge", asset: "<USDC_ASA_ID>" }`.
-5. **Unified Merchant Address**: All routes share the exact same `payTo` address to aggregate volume as a single composite product.
+- **GitHub Actions**: Automated CI runs on every push and pull request to `main` via [`.github/workflows/ci.yml`](.github/workflows/ci.yml), compiling TypeScript and executing all test suites.
+- **Fail-Closed Monitoring**: `/health` checks facilitator health and returns `503 Service Unavailable` if the facilitator is disconnected, preventing payments when verification cannot complete.
 
 ---
 

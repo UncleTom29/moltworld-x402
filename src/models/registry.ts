@@ -57,16 +57,16 @@ export const INITIAL_MODELS: ModelDefinition[] = [
   },
   {
     slug: "gpt-4o",
-    displayName: "GPT-4o Omni",
+    displayName: "GPT-4o",
     modality: "chat",
     provider: process.env.GPT4O_PROVIDER || "openrouter",
     upstreamModelId: process.env.GPT4O_UPSTREAM_MODEL || "openai/gpt-4o",
     price: process.env.PRICE_GPT4O || "$0.05",
     limits: {
-      maxInputTokens: 8192,
-      maxOutputTokens: 4096,
+      maxInputTokens: 4096,
+      maxOutputTokens: 1024,
       maxMessages: 50,
-      maxPromptChars: 64000,
+      maxPromptChars: 32000,
     },
     enabled: true,
     description: "GPT-4o flagship inference through Moltworld: state-of-the-art reasoning and knowledge.",
@@ -91,19 +91,19 @@ export const INITIAL_MODELS: ModelDefinition[] = [
   },
   {
     slug: "claude-sonnet",
-    displayName: "Claude 3.7 Sonnet",
+    displayName: "Claude Sonnet 4.5",
     modality: "chat",
     provider: process.env.CLAUDE_SONNET_PROVIDER || "openrouter",
     upstreamModelId: process.env.CLAUDE_SONNET_UPSTREAM_MODEL || "anthropic/claude-sonnet-4.5",
     price: process.env.PRICE_CLAUDE_SONNET || "$0.06",
     limits: {
-      maxInputTokens: 8192,
-      maxOutputTokens: 4096,
+      maxInputTokens: 4096,
+      maxOutputTokens: 1024,
       maxMessages: 50,
-      maxPromptChars: 64000,
+      maxPromptChars: 32000,
     },
     enabled: true,
-    description: "Claude 3.7 Sonnet reasoning through Moltworld: hybrid thinking and coding intelligence.",
+    description: "Claude Sonnet 4.5 hybrid reasoning & coding intelligence through Moltworld.",
     tags: ["chat", "claude", "anthropic", "reasoning", "x402-global-challenge"],
   },
   {
@@ -148,10 +148,10 @@ export const INITIAL_MODELS: ModelDefinition[] = [
     upstreamModelId: process.env.GEMINI_PRO_UPSTREAM_MODEL || "google/gemini-2.5-pro",
     price: process.env.PRICE_GEMINI_PRO || "$0.04",
     limits: {
-      maxInputTokens: 8192,
-      maxOutputTokens: 4096,
+      maxInputTokens: 4096,
+      maxOutputTokens: 1024,
       maxMessages: 50,
-      maxPromptChars: 64000,
+      maxPromptChars: 32000,
     },
     enabled: true,
     description: "Gemini 2.5 Pro frontier reasoning and complex analysis through Moltworld.",
@@ -182,10 +182,10 @@ export const INITIAL_MODELS: ModelDefinition[] = [
     upstreamModelId: process.env.DEEPSEEK_R1_UPSTREAM_MODEL || "deepseek/deepseek-r1",
     price: process.env.PRICE_DEEPSEEK_R1 || "$0.02",
     limits: {
-      maxInputTokens: 8192,
-      maxOutputTokens: 4096,
+      maxInputTokens: 4096,
+      maxOutputTokens: 2048,
       maxMessages: 50,
-      maxPromptChars: 64000,
+      maxPromptChars: 32000,
     },
     enabled: true,
     description: "DeepSeek R1 reasoning through Moltworld: transparent chain-of-thought verification.",
@@ -210,7 +210,7 @@ export const INITIAL_MODELS: ModelDefinition[] = [
   },
 
   // ----------------------------------------------------
-  // Image Generation Models
+  // Image Generation Models (Disabled until /api/v1/images integration is live)
   // ----------------------------------------------------
   {
     slug: "flux-schnell",
@@ -222,8 +222,8 @@ export const INITIAL_MODELS: ModelDefinition[] = [
     limits: {
       maxPromptChars: 2000,
     },
-    enabled: true,
-    description: "FLUX.1 Schnell high-speed image generation through Moltworld: generate high-fidelity images in seconds.",
+    enabled: false,
+    description: "FLUX.1 Schnell high-speed image generation through Moltworld.",
     tags: ["image", "flux", "bfl", "fast", "x402-global-challenge"],
   },
   {
@@ -236,13 +236,13 @@ export const INITIAL_MODELS: ModelDefinition[] = [
     limits: {
       maxPromptChars: 4000,
     },
-    enabled: true,
-    description: "FLUX.1 Dev photorealistic image generation through Moltworld: exceptional typography and visual quality.",
+    enabled: false,
+    description: "FLUX.1 Dev photorealistic image generation through Moltworld.",
     tags: ["image", "flux", "photorealistic", "x402-global-challenge"],
   },
   {
     slug: "dall-e-3",
-    displayName: "DALL-E 3",
+    displayName: "GPT-5 Image Mini",
     modality: "image",
     provider: "openrouter",
     upstreamModelId: "openai/gpt-5-image-mini",
@@ -250,27 +250,27 @@ export const INITIAL_MODELS: ModelDefinition[] = [
     limits: {
       maxPromptChars: 4000,
     },
-    enabled: true,
-    description: "DALL-E 3 creative image generation through Moltworld: highly detailed prompt adherence.",
-    tags: ["image", "dalle", "openai", "creative", "x402-global-challenge"],
+    enabled: false,
+    description: "Creative image generation through Moltworld.",
+    tags: ["image", "openai", "creative", "x402-global-challenge"],
   },
   {
     slug: "recraft-v3",
     displayName: "Recraft V3",
     modality: "image",
     provider: "openrouter",
-    upstreamModelId: "recraft-ai/recraft-v3",
+    upstreamModelId: "recraft/recraft-v3",
     price: process.env.PRICE_RECRAFT || "$0.04",
     limits: {
       maxPromptChars: 3000,
     },
-    enabled: true,
-    description: "Recraft V3 vector and brand graphic generation through Moltworld: generate logos, icons, and illustrations.",
+    enabled: false,
+    description: "Recraft V3 vector and brand graphic generation through Moltworld.",
     tags: ["image", "recraft", "vector", "design", "x402-global-challenge"],
   },
 
   // ----------------------------------------------------
-  // Voice / Audio Models
+  // Voice / Audio Models (Disabled pending direct provider keys)
   // ----------------------------------------------------
   {
     slug: "tts-1",
@@ -282,8 +282,8 @@ export const INITIAL_MODELS: ModelDefinition[] = [
     limits: {
       maxPromptChars: 4096,
     },
-    enabled: true,
-    description: "OpenAI TTS-1 text-to-speech synthesis through Moltworld: natural speech generation with low latency.",
+    enabled: false,
+    description: "OpenAI TTS-1 text-to-speech synthesis through Moltworld.",
     tags: ["voice", "tts", "openai", "speech", "x402-global-challenge"],
   },
   {
@@ -296,8 +296,8 @@ export const INITIAL_MODELS: ModelDefinition[] = [
     limits: {
       maxPromptChars: 4096,
     },
-    enabled: true,
-    description: "OpenAI TTS-1 HD high-definition text-to-speech synthesis through Moltworld: studio quality audio.",
+    enabled: false,
+    description: "OpenAI TTS-1 HD high-definition text-to-speech synthesis through Moltworld.",
     tags: ["voice", "tts", "hd", "audio", "x402-global-challenge"],
   },
   {
@@ -310,13 +310,13 @@ export const INITIAL_MODELS: ModelDefinition[] = [
     limits: {
       maxPromptChars: 5000,
     },
-    enabled: true,
-    description: "ElevenLabs Multilingual V2 lifelike voice cloning and expressive synthesis through Moltworld in 29+ languages.",
+    enabled: false,
+    description: "ElevenLabs Multilingual V2 lifelike voice cloning and expressive synthesis through Moltworld.",
     tags: ["voice", "elevenlabs", "multilingual", "cloning", "x402-global-challenge"],
   },
 
   // ----------------------------------------------------
-  // Video Generation Models
+  // Video Generation Models (Disabled pending video provider keys)
   // ----------------------------------------------------
   {
     slug: "kling-v1",
@@ -329,8 +329,8 @@ export const INITIAL_MODELS: ModelDefinition[] = [
       maxPromptChars: 2500,
       maxDurationSeconds: 10,
     },
-    enabled: true,
-    description: "Kling AI V1.5 high-motion text-to-video generation through Moltworld: physics-accurate cinematic videos.",
+    enabled: false,
+    description: "Kling AI V1.5 text-to-video generation through Moltworld.",
     tags: ["video", "kling", "cinematic", "x402-global-challenge"],
   },
   {
@@ -344,8 +344,8 @@ export const INITIAL_MODELS: ModelDefinition[] = [
       maxPromptChars: 2500,
       maxDurationSeconds: 10,
     },
-    enabled: true,
-    description: "Luma Ray-2 Dream Machine video generation through Moltworld: dynamic camera motion and realistic lighting.",
+    enabled: false,
+    description: "Luma Ray-2 Dream Machine video generation through Moltworld.",
     tags: ["video", "luma", "camera-motion", "x402-global-challenge"],
   },
   {
@@ -359,8 +359,8 @@ export const INITIAL_MODELS: ModelDefinition[] = [
       maxPromptChars: 2000,
       maxDurationSeconds: 6,
     },
-    enabled: true,
-    description: "MiniMax Video-01 text-to-video generation through Moltworld: fast rendering with high character consistency.",
+    enabled: false,
+    description: "MiniMax Video-01 text-to-video generation through Moltworld.",
     tags: ["video", "minimax", "character", "x402-global-challenge"],
   },
 ];

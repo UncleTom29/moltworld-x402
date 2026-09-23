@@ -11,12 +11,38 @@ import {
 import { ModelModality } from "../providers/types.js";
 
 const startTime = Date.now();
+let isGatewayReady = false;
+let gatewayInitError: string | null = null;
+
+export function setGatewayReady(ready: boolean, error?: string): void {
+  isGatewayReady = ready;
+  gatewayInitError = error || null;
+}
+
+export function isReady(): boolean {
+  return isGatewayReady;
+}
 
 export function handleHealth(c: Context): Response {
+  if (!isGatewayReady) {
+    return c.json(
+      {
+        status: "degraded",
+        ready: false,
+        version: "1.0.0",
+        product: "Moltworld",
+        error: gatewayInitError || "x402 Facilitator unavailable. Gateway failing closed to protect user funds.",
+        timestamp: new Date().toISOString(),
+      },
+      503
+    );
+  }
+
   const models = defaultModelRegistry.getEnabledModels();
 
   return c.json({
     status: "healthy",
+    ready: true,
     version: "1.0.0",
     product: "Moltworld",
     public_domain: config.publicDomain,
@@ -27,7 +53,7 @@ export function handleHealth(c: Context): Response {
     facilitator: config.facilitatorUrl,
     bazaar_enabled: true,
     tag: "x402-global-challenge",
-    modalities_supported: ["chat", "image", "voice", "video"],
+    modalities_supported: ["chat"],
     enabled_models: models.length,
     models_by_modality: {
       chat: models.filter((m) => m.modality === "chat").length,
@@ -88,6 +114,32 @@ export async function handleChatCompletion(c: Context): Promise<Response> {
     );
   }
 
+  if (!isGatewayReady) {
+    return c.json(
+      {
+        error: {
+          message: "Gateway payment verification is currently unavailable. Failing closed.",
+          type: "service_unavailable",
+          code: "facilitator_unavailable",
+        },
+      },
+      503
+    );
+  }
+
+  if (!defaultProviderRegistry.hasProvider(model.provider)) {
+    return c.json(
+      {
+        error: {
+          message: `Provider '${model.provider}' for model '${modelSlug}' is not available or configured. Failing closed.`,
+          type: "service_unavailable",
+          code: "provider_unconfigured",
+        },
+      },
+      503
+    );
+  }
+
   const validationResult = await validateChatCompletionRequest(c, model);
   if (!validationResult.valid) {
     return c.json(
@@ -144,6 +196,32 @@ export async function handleImageGeneration(c: Context): Promise<Response> {
         },
       },
       404
+    );
+  }
+
+  if (!isGatewayReady) {
+    return c.json(
+      {
+        error: {
+          message: "Gateway payment verification is currently unavailable. Failing closed.",
+          type: "service_unavailable",
+          code: "facilitator_unavailable",
+        },
+      },
+      503
+    );
+  }
+
+  if (!defaultProviderRegistry.hasProvider(model.provider)) {
+    return c.json(
+      {
+        error: {
+          message: `Provider '${model.provider}' for model '${modelSlug}' is not available or configured. Failing closed.`,
+          type: "service_unavailable",
+          code: "provider_unconfigured",
+        },
+      },
+      503
     );
   }
 
@@ -209,6 +287,32 @@ export async function handleAudioSpeech(c: Context): Promise<Response> {
     );
   }
 
+  if (!isGatewayReady) {
+    return c.json(
+      {
+        error: {
+          message: "Gateway payment verification is currently unavailable. Failing closed.",
+          type: "service_unavailable",
+          code: "facilitator_unavailable",
+        },
+      },
+      503
+    );
+  }
+
+  if (!defaultProviderRegistry.hasProvider(model.provider)) {
+    return c.json(
+      {
+        error: {
+          message: `Provider '${model.provider}' for model '${modelSlug}' is not available or configured. Failing closed.`,
+          type: "service_unavailable",
+          code: "provider_unconfigured",
+        },
+      },
+      503
+    );
+  }
+
   const validationResult = await validateAudioRequest(c, model);
   if (!validationResult.valid) {
     return c.json(
@@ -268,6 +372,32 @@ export async function handleVideoGeneration(c: Context): Promise<Response> {
         },
       },
       404
+    );
+  }
+
+  if (!isGatewayReady) {
+    return c.json(
+      {
+        error: {
+          message: "Gateway payment verification is currently unavailable. Failing closed.",
+          type: "service_unavailable",
+          code: "facilitator_unavailable",
+        },
+      },
+      503
+    );
+  }
+
+  if (!defaultProviderRegistry.hasProvider(model.provider)) {
+    return c.json(
+      {
+        error: {
+          message: `Provider '${model.provider}' for model '${modelSlug}' is not available or configured. Failing closed.`,
+          type: "service_unavailable",
+          code: "provider_unconfigured",
+        },
+      },
+      503
     );
   }
 

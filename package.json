@@ -10,6 +10,7 @@
     "test": "vitest run",
     "test:client": "tsx src/client/testClient.ts",
     "build": "tsc",
+    "start:prod": "node dist/server.js",
     "deploy:worker": "bash scripts/deploy.sh worker",
     "deploy:docker": "bash scripts/deploy.sh docker"
   },

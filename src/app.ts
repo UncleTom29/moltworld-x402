@@ -17,6 +17,7 @@ import {
   handleImageGeneration,
   handleAudioSpeech,
   handleVideoGeneration,
+  setGatewayReady,
 } from "./routes/api.js";
 import { defaultModelRegistry } from "./models/registry.js";
 
@@ -99,8 +100,13 @@ export function createApp(): {
   const init = async () => {
     try {
       await server.initialize();
-    } catch (err) {
-      console.warn("Facilitator init warning:", err);
+      setGatewayReady(true);
+      console.log("x402 Facilitator initialized successfully. Gateway is READY.");
+    } catch (err: any) {
+      const msg = err?.message || String(err);
+      setGatewayReady(false, msg);
+      console.error("CRITICAL: x402 Facilitator initialization failed. Gateway failing closed:", msg);
+      throw err;
     }
   };
 

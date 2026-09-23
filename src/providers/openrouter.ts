@@ -100,7 +100,7 @@ export class OpenRouterProvider implements AIProvider {
     const timeout = setTimeout(() => controller.abort(), this.timeoutMs);
 
     try {
-      const response = await fetch("https://openrouter.ai/api/v1/images/generations", {
+      const response = await fetch("https://openrouter.ai/api/v1/images", {
         method: "POST",
         headers: {
           Authorization: `Bearer ${this.apiKey}`,
@@ -113,7 +113,7 @@ export class OpenRouterProvider implements AIProvider {
           prompt: request.prompt,
           n: request.n || 1,
           size: request.size || "1024x1024",
-          response_format: request.response_format || "url",
+          response_format: request.response_format || "b64_json",
         }),
         signal: controller.signal,
       });

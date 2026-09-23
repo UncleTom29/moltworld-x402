@@ -292,19 +292,19 @@ export function renderLandingPage(c: Context): Response {
 
     <section class="hero">
       <h1>One API for AI models and agents.</h1>
-      <p>Chat, Image, Voice, and Video. Pay per request in USDC on Algorand. No subscriptions or prepaid credits.</p>
+      <p>Access Claude Sonnet 4.5, GPT-4o, Gemini 2.5, DeepSeek R1, and Llama 3.3. Pay per request in USDC on Algorand. Zero subscriptions.</p>
       <div class="network-pill">
         Settlement: <strong>Algorand USDC</strong> (ASA: ${usdcAsa}) via GoPlausible Facilitator
       </div>
     </section>
 
-    <h2>Available Models & Modalities</h2>
+    <h2>Available Models & Verified Endpoints</h2>
     <div class="tabs">
-      <button class="tab-btn active" onclick="filterModality('all', this)">All (${models.length})</button>
+      <button class="tab-btn active" onclick="filterModality('all', this)">All Active (${models.length})</button>
       <button class="tab-btn" onclick="filterModality('chat', this)">Chat (${models.filter(m => m.modality === 'chat').length})</button>
-      <button class="tab-btn" onclick="filterModality('image', this)">Image (${models.filter(m => m.modality === 'image').length})</button>
-      <button class="tab-btn" onclick="filterModality('voice', this)">Voice (${models.filter(m => m.modality === 'voice').length})</button>
-      <button class="tab-btn" onclick="filterModality('video', this)">Video (${models.filter(m => m.modality === 'video').length})</button>
+      <span style="font-family: var(--mono); font-size: 0.75rem; color: #8e95a5; display: inline-flex; align-items: center; margin-left: 0.5rem;">
+        Image, Voice & Video endpoints fail-closed until upstream keys verified
+      </span>
     </div>
 
     <div class="models-grid" id="modelsGrid">
@@ -344,8 +344,8 @@ export function renderLandingPage(c: Context): Response {
       </div>
       <div class="step-card">
         <div class="step-num">03 / INFERENCE</div>
-        <div class="step-title">Instant Media</div>
-        <div class="step-desc">Request is authorized, model executes (Chat, Image, Voice, or Video), and response is returned.</div>
+        <div class="step-title">Instant Response</div>
+        <div class="step-desc">Request is verified, model executes with guaranteed token capacity, and response is returned.</div>
       </div>
     </div>
 
@@ -354,30 +354,29 @@ export function renderLandingPage(c: Context): Response {
 <span class="hl-keyword">import</span> { ExactAvmScheme, toClientAvmSigner } <span class="hl-keyword">from</span> <span class="hl-string">"@x402/avm"</span>;
 
 <span class="hl-comment">// 1. Initialize Algorand client signer</span>
-<span class="hl-keyword">const</span> signer = toClientAvmSigner(process.env.AVM_PRIVATE_KEY!);
+<span class="hl-keyword">const</span> signer = toClientAvmSigner(process.env.AVM_CLIENT_PRIVATE_KEY!);
 <span class="hl-keyword">const</span> client = <span class="hl-keyword">new</span> x402Client().register(<span class="hl-string">"algorand:*"</span>, <span class="hl-keyword">new</span> ExactAvmScheme(signer));
 <span class="hl-keyword">const</span> fetchWithPay = wrapFetchWithPayment(globalThis.fetch, client);
 
-<span class="hl-comment">// Example 1: Chat Completion ($0.03 USDC)</span>
-<span class="hl-keyword">const</span> chatRes = <span class="hl-keyword">await</span> fetchWithPay(<span class="hl-string">"${config.publicDomain}/v1/models/gpt/chat/completions"</span>, {
+<span class="hl-comment">// Example 1: Claude Sonnet 4.5 ($0.06 USDC)</span>
+<span class="hl-keyword">const</span> claudeRes = <span class="hl-keyword">await</span> fetchWithPay(<span class="hl-string">"${config.publicDomain}/v1/models/claude-sonnet/chat/completions"</span>, {
   method: <span class="hl-string">"POST"</span>,
   headers: { <span class="hl-string">"Content-Type"</span>: <span class="hl-string">"application/json"</span> },
-  body: JSON.stringify({ messages: [{ role: <span class="hl-string">"user"</span>, content: <span class="hl-string">"Explain Algorand."</span> }] })
+  body: JSON.stringify({ messages: [{ role: <span class="hl-string">"user"</span>, content: <span class="hl-string">"Explain Algorand consensus."</span> }] })
 });
 
-<span class="hl-comment">// Example 2: Image Generation ($0.02 USDC)</span>
-<span class="hl-keyword">const</span> imgRes = <span class="hl-keyword">await</span> fetchWithPay(<span class="hl-string">"${config.publicDomain}/v1/models/flux-schnell/images/generations"</span>, {
+<span class="hl-comment">// Example 2: Gemini 2.5 Flash Lite ($0.01 USDC)</span>
+<span class="hl-keyword">const</span> geminiRes = <span class="hl-keyword">await</span> fetchWithPay(<span class="hl-string">"${config.publicDomain}/v1/models/gemini-lite/chat/completions"</span>, {
   method: <span class="hl-string">"POST"</span>,
   headers: { <span class="hl-string">"Content-Type"</span>: <span class="hl-string">"application/json"</span> },
-  body: JSON.stringify({ prompt: <span class="hl-string">"Futuristic neon cityscape at dusk"</span>, size: <span class="hl-string">"1024x1024"</span> })
+  body: JSON.stringify({ messages: [{ role: <span class="hl-string">"user"</span>, content: <span class="hl-string">"Hello from autonomous agent"</span> }] })
 });</code></pre>
 
     <div class="nav-links">
       <a href="/v1/models">GET /v1/models (JSON)</a>
-      <a href="/v1/models?modality=image">GET /v1/models?modality=image</a>
       <a href="/health">GET /health</a>
       <a href="https://facilitator.goplausible.xyz" target="_blank" rel="noopener">GoPlausible Facilitator</a>
-      <a href="https://github.com" target="_blank" rel="noopener">Docs</a>
+      <a href="https://github.com/UncleTom29/moltworld-x402" target="_blank" rel="noopener">GitHub Repository</a>
     </div>
   </div>
 

@@ -1,0 +1,20 @@
+[Unit]
+Description=Moltworld x402 AI Model Gateway
+After=network.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/opt/moltworld-x402
+EnvironmentFile=/opt/moltworld-x402/.env
+ExecStart=/usr/bin/node /opt/moltworld-x402/dist/server.js
+Restart=always
+RestartSec=5
+KillSignal=SIGTERM
+TimeoutStopSec=15
+StandardOutput=journal
+StandardError=journal
+LimitNOFILE=65535
+
+[Install]
+WantedBy=multi-user.target

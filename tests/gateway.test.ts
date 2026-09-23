@@ -14,7 +14,7 @@ beforeAll(async () => {
 }, 30000);
 
 describe("Moltworld x402 Gateway - Free Routes & Modality Filtering", () => {
-  it("GET / returns 200 OK with polished landing page HTML and modality tabs", async () => {
+  it("GET / returns 200 OK with polished landing page HTML", async () => {
     const res = await app.fetch(new Request("http://localhost/"));
     expect(res.status).toBe(200);
     const contentType = res.headers.get("content-type");
@@ -25,32 +25,23 @@ describe("Moltworld x402 Gateway - Free Routes & Modality Filtering", () => {
     expect(html).toContain("One API for AI models and agents");
     expect(html).toContain("Algorand USDC");
     expect(html).toContain("x402");
-    expect(html).toContain("data-modality=\"chat\"");
-    expect(html).toContain("data-modality=\"image\"");
-    expect(html).toContain("data-modality=\"voice\"");
-    expect(html).toContain("data-modality=\"video\"");
   });
 
-  it("GET /health returns 200 OK with health status, 20 models, 4 modalities, and zero exposed secrets", async () => {
+  it("GET /health returns 200 OK with 10 enabled models and zero exposed secrets", async () => {
     const res = await app.fetch(new Request("http://localhost/health"));
     expect(res.status).toBe(200);
 
     const body = (await res.json()) as any;
     expect(body.status).toBe("healthy");
+    expect(body.ready).toBe(true);
     expect(body.product).toBe("Moltworld");
     expect(body.public_domain).toBe(config.publicDomain);
     expect(body.network).toBe("testnet");
     expect(body.usdc_asset_id).toBe(USDC_TESTNET_ASA_ID);
     expect(body.pay_to).toBe(config.payToAddress);
     expect(body.tag).toBe("x402-global-challenge");
-    expect(body.modalities_supported).toEqual(["chat", "image", "voice", "video"]);
-    expect(body.enabled_models).toBe(20);
-    expect(body.models_by_modality).toEqual({
-      chat: 10,
-      image: 4,
-      voice: 3,
-      video: 3,
-    });
+    expect(body.enabled_models).toBe(10);
+    expect(body.models_by_modality.chat).toBe(10);
     expect(body.uptime_seconds).toBeGreaterThanOrEqual(0);
 
     // Ensure no secrets leaked
@@ -60,70 +51,91 @@ describe("Moltworld x402 Gateway - Free Routes & Modality Filtering", () => {
     expect(jsonStr).not.toContain("secret");
   });
 
-  it("GET /v1/models returns 200 OK with all 20 models across all 4 modalities", async () => {
+  it("GET /health returns 503 degraded when facilitator is unavailable (Fail Closed)", async () => {
+    const { setGatewayReady } = await import("../src/routes/api.js");
+    setGatewayReady(false, "Simulated facilitator outage");
+
+    const res = await app.fetch(new Request("http://localhost/health"));
+    expect(res.status).toBe(503);
+    const body = (await res.json()) as any;
+    expect(body.status).toBe("degraded");
+    expect(body.ready).toBe(false);
+
+    // Restore ready state
+    setGatewayReady(true);
+  });
+
+  it("GET /v1/models returns 200 OK with all 10 enabled models", async () => {
     const res = await app.fetch(new Request("http://localhost/v1/models"));
     expect(res.status).toBe(200);
 
     const body = (await res.json()) as any;
     expect(body.object).toBe("list");
     expect(Array.isArray(body.data)).toBe(true);
-    expect(body.data.length).toBe(20);
-
-    const modalities = new Set(body.data.map((m: any) => m.modality));
-    expect(modalities.has("chat")).toBe(true);
-    expect(modalities.has("image")).toBe(true);
-    expect(modalities.has("voice")).toBe(true);
-    expect(modalities.has("video")).toBe(true);
-  });
-
-  it("GET /v1/models?modality=image filters correctly to image models", async () => {
-    const res = await app.fetch(new Request("http://localhost/v1/models?modality=image"));
-    expect(res.status).toBe(200);
-
-    const body = (await res.json()) as any;
-    expect(body.data.length).toBe(4);
-    for (const model of body.data) {
-      expect(model.modality).toBe("image");
-      expect(model.endpoint).toContain("/images/generations");
-    }
+    expect(body.data.length).toBe(10);
 
     const slugs = body.data.map((m: any) => m.id);
-    expect(slugs).toEqual(["flux-schnell", "flux-dev", "dall-e-3", "recraft-v3"]);
+    expect(slugs).toContain("gpt");
+    expect(slugs).toContain("gpt-4o");
+    expect(slugs).toContain("claude");
+    expect(slugs).toContain("claude-sonnet");
+    expect(slugs).toContain("gemini");
+    expect(slugs).toContain("gemini-lite");
+    expect(slugs).toContain("gemini-pro");
+    expect(slugs).toContain("deepseek");
+    expect(slugs).toContain("deepseek-r1");
+    expect(slugs).toContain("llama");
   });
 
-  it("GET /v1/models?modality=voice filters correctly to voice models", async () => {
-    const res = await app.fetch(new Request("http://localhost/v1/models?modality=voice"));
-    expect(res.status).toBe(200);
-
+  it("verifies accurate model identity: Claude Sonnet 4.5 and Claude 3 Haiku", async () => {
+    const res = await app.fetch(new Request("http://localhost/v1/models"));
     const body = (await res.json()) as any;
-    expect(body.data.length).toBe(3);
-    for (const model of body.data) {
-      expect(model.modality).toBe("voice");
-      expect(model.endpoint).toContain("/audio/speech");
-    }
 
-    const slugs = body.data.map((m: any) => m.id);
-    expect(slugs).toEqual(["tts-1", "tts-1-hd", "eleven-multilingual"]);
+    const sonnet = body.data.find((m: any) => m.id === "claude-sonnet");
+    expect(sonnet.name).toBe("Claude Sonnet 4.5");
+
+    const haiku = body.data.find((m: any) => m.id === "claude");
+    expect(haiku.name).toBe("Claude 3 Haiku");
   });
 
-  it("GET /v1/models?modality=video filters correctly to video models", async () => {
-    const res = await app.fetch(new Request("http://localhost/v1/models?modality=video"));
-    expect(res.status).toBe(200);
+  it("guarantees >= 50% profit margin under maximum permitted token limits for all models", () => {
+    // OpenRouter rates (in USD per 1M tokens)
+    const rates: Record<string, { prompt: number; completion: number }> = {
+      gpt: { prompt: 0.15, completion: 0.60 },
+      "gpt-4o": { prompt: 2.50, completion: 10.00 },
+      claude: { prompt: 0.25, completion: 1.25 },
+      "claude-sonnet": { prompt: 3.00, completion: 15.00 },
+      gemini: { prompt: 0.30, completion: 2.50 },
+      "gemini-lite": { prompt: 0.10, completion: 0.40 },
+      "gemini-pro": { prompt: 1.25, completion: 10.00 },
+      deepseek: { prompt: 0.32, completion: 0.89 },
+      "deepseek-r1": { prompt: 0.70, completion: 2.50 },
+      llama: { prompt: 0.10, completion: 0.32 },
+    };
 
-    const body = (await res.json()) as any;
-    expect(body.data.length).toBe(3);
-    for (const model of body.data) {
-      expect(model.modality).toBe("video");
-      expect(model.endpoint).toContain("/videos/generations");
+    const models = defaultModelRegistry.getEnabledModels();
+    expect(models.length).toBe(10);
+
+    for (const model of models) {
+      const rate = rates[model.slug];
+      expect(rate).toBeDefined();
+
+      const priceUsd = parseFloat(model.price.replace("$", ""));
+      const maxIn = model.limits.maxInputTokens || 4096;
+      const maxOut = model.limits.maxOutputTokens || 1024;
+
+      const maxUpstreamCost = (maxIn * rate.prompt) / 1e6 + (maxOut * rate.completion) / 1e6;
+      const grossMargin = (priceUsd - maxUpstreamCost) / priceUsd;
+
+      // Price MUST exceed worst-case upstream cost by at least 50%
+      expect(grossMargin).toBeGreaterThanOrEqual(0.50);
+      expect(priceUsd).toBeGreaterThanOrEqual(maxUpstreamCost * 1.5);
     }
-
-    const slugs = body.data.map((m: any) => m.id);
-    expect(slugs).toEqual(["kling-v1", "luma-ray", "minimax-video"]);
   });
 });
 
-describe("Moltworld x402 Gateway - Payment Gating (HTTP 402) for All Modalities", () => {
-  it("POST /v1/models/gpt/chat/completions returns 402 for Chat inference", async () => {
+describe("Moltworld x402 Gateway - Payment Gating (HTTP 402) & Fail-Closed Protection", () => {
+  it("POST /v1/models/gpt/chat/completions returns 402 with exact USDC price and Bazaar extension", async () => {
     const res = await app.fetch(
       new Request("http://localhost/v1/models/gpt/chat/completions", {
         method: "POST",
@@ -150,93 +162,44 @@ describe("Moltworld x402 Gateway - Payment Gating (HTTP 402) for All Modalities"
     expect(decoded.extensions.bazaar.info.output.type).toBe("json");
   });
 
-  it("POST /v1/models/flux-schnell/images/generations returns 402 for Image generation", async () => {
+  it("POST /v1/models/claude-sonnet/chat/completions returns 402 with $0.06 pricing", async () => {
     const res = await app.fetch(
-      new Request("http://localhost/v1/models/flux-schnell/images/generations", {
+      new Request("http://localhost/v1/models/claude-sonnet/chat/completions", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          prompt: "A futuristic cyberpunk city powered by Algorand",
-          size: "1024x1024",
+          messages: [{ role: "user", content: "Write a smart contract" }],
         }),
       })
     );
 
     expect(res.status).toBe(402);
     const payReqHeader = res.headers.get("payment-required");
-    expect(payReqHeader).toBeTruthy();
-
     const decoded = JSON.parse(Buffer.from(payReqHeader!, "base64").toString("utf8"));
-    expect(decoded.x402Version).toBe(2);
-    expect(decoded.resource.url).toContain("/v1/models/flux-schnell/images/generations");
-    expect(decoded.accepts[0].amount).toBe("20000"); // $0.02
-    expect(decoded.accepts[0].payTo).toBe(config.payToAddress);
-    expect(decoded.accepts[0].extra.tag).toBe("x402-global-challenge");
-    expect(decoded.extensions.bazaar).toBeDefined();
-    expect(decoded.extensions.bazaar.info.input.method).toBe("POST");
-    expect(decoded.extensions.bazaar.info.output.type).toBe("json");
+    expect(decoded.accepts[0].amount).toBe("60000"); // $0.06
   });
 
-  it("POST /v1/models/tts-1/audio/speech returns 402 for Voice synthesis", async () => {
-    const res = await app.fetch(
-      new Request("http://localhost/v1/models/tts-1/audio/speech", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          input: "Welcome to Moltworld, the pay-per-request AI gateway on Algorand.",
-          voice: "alloy",
-        }),
-      })
-    );
-
-    expect(res.status).toBe(402);
-    const payReqHeader = res.headers.get("payment-required");
-    expect(payReqHeader).toBeTruthy();
-
-    const decoded = JSON.parse(Buffer.from(payReqHeader!, "base64").toString("utf8"));
-    expect(decoded.x402Version).toBe(2);
-    expect(decoded.resource.url).toContain("/v1/models/tts-1/audio/speech");
-    expect(decoded.accepts[0].amount).toBe("20000"); // $0.02
-    expect(decoded.accepts[0].payTo).toBe(config.payToAddress);
-    expect(decoded.accepts[0].extra.tag).toBe("x402-global-challenge");
-    expect(decoded.extensions.bazaar).toBeDefined();
-    expect(decoded.extensions.bazaar.info.input.method).toBe("POST");
-    expect(decoded.extensions.bazaar.info.output.type).toBe("json");
-  });
-
-  it("POST /v1/models/kling-v1/videos/generations returns 402 for Video generation", async () => {
+  it("disabled/unsupported endpoints return 404 and NEVER accept payment (Protection Against Unfulfilled Requests)", async () => {
+    // Kling is disabled because no Kling provider is implemented
     const res = await app.fetch(
       new Request("http://localhost/v1/models/kling-v1/videos/generations", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          prompt: "Cinematic drone shot of algorithmic blockchain nodes glowing in the dark",
-          duration: 5,
-        }),
+        body: JSON.stringify({ prompt: "Drone shot" }),
       })
     );
 
-    expect(res.status).toBe(402);
-    const payReqHeader = res.headers.get("payment-required");
-    expect(payReqHeader).toBeTruthy();
-
-    const decoded = JSON.parse(Buffer.from(payReqHeader!, "base64").toString("utf8"));
-    expect(decoded.x402Version).toBe(2);
-    expect(decoded.resource.url).toContain("/v1/models/kling-v1/videos/generations");
-    expect(decoded.accepts[0].amount).toBe("250000"); // $0.25
-    expect(decoded.accepts[0].payTo).toBe(config.payToAddress);
-    expect(decoded.accepts[0].extra.tag).toBe("x402-global-challenge");
-    expect(decoded.extensions.bazaar).toBeDefined();
-    expect(decoded.extensions.bazaar.info.input.method).toBe("POST");
-    expect(decoded.extensions.bazaar.info.output.type).toBe("json");
+    expect(res.status).toBe(404);
+    const body = (await res.json()) as any;
+    expect(body.error.code).toBe("model_not_found");
   });
 
   it("attaches Cloudflare anti-caching headers and x-request-id on all /v1/* routes", async () => {
     const res = await app.fetch(
-      new Request("http://localhost/v1/models/flux-schnell/images/generations", {
+      new Request("http://localhost/v1/models/gpt/chat/completions", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ prompt: "Test prompt" }),
+        body: JSON.stringify({ messages: [{ role: "user", content: "Hello" }] }),
       })
     );
 

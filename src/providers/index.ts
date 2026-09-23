@@ -42,17 +42,15 @@ export class ProviderRegistry {
       return provider;
     }
 
-    // Fallbacks
-    if (this.providers.has("openrouter")) {
-      return this.providers.get("openrouter")!;
-    }
+    // Fail closed! Never silently fall back to mock or an unconfigured provider in production
+    throw new Error(
+      `Upstream AI provider '${providerId}' is not configured or available. Operation rejected to protect user payment.`
+    );
+  }
 
-    if (this.providers.has("openai")) {
-      return this.providers.get("openai")!;
-    }
-
-    // Default to mock provider
-    return this.providers.get("mock")!;
+  hasProvider(providerId: string): boolean {
+    if (config.mockProviders) return true;
+    return this.providers.has(providerId.toLowerCase());
   }
 }
 

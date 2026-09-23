@@ -1,6 +1,6 @@
 import { app, init } from "./app.js";
 
-let initialized = false;
+let initPromise: Promise<void> | undefined;
 
 export default {
   async fetch(request: Request, env: Record<string, string>, ctx: any): Promise<Response> {
@@ -13,15 +13,9 @@ export default {
       }
     }
 
-    // Lazy initialization for serverless edge cold starts
-    if (!initialized) {
-      if (ctx?.waitUntil) {
-        ctx.waitUntil(init());
-      } else {
-        await init();
-      }
-      initialized = true;
-    }
+    // Await facilitator initialization to prevent race conditions on cold start
+    initPromise ??= init();
+    await initPromise;
 
     return app.fetch(request, env, ctx);
   },
