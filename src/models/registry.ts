@@ -522,8 +522,8 @@ export const INITIAL_MODELS: ModelDefinition[] = [
     slug: "tts-1",
     displayName: "OpenAI TTS-1",
     modality: "voice",
-    provider: "openai",
-    upstreamModelId: "tts-1",
+    provider: "openrouter",
+    upstreamModelId: "openrouter/free",
     price: process.env.PRICE_TTS1 || "$0.10",
     limits: {
       maxPromptChars: 1000,
@@ -536,8 +536,8 @@ export const INITIAL_MODELS: ModelDefinition[] = [
     slug: "tts-1-hd",
     displayName: "OpenAI TTS-1 HD",
     modality: "voice",
-    provider: "openai",
-    upstreamModelId: "tts-1-hd",
+    provider: "openrouter",
+    upstreamModelId: "openrouter/free",
     price: process.env.PRICE_TTS1_HD || "$0.20",
     limits: {
       maxPromptChars: 1000,
@@ -564,8 +564,8 @@ export const INITIAL_MODELS: ModelDefinition[] = [
     slug: "eleven-multilingual",
     displayName: "ElevenLabs Multilingual V2",
     modality: "voice",
-    provider: "elevenlabs",
-    upstreamModelId: "eleven_multilingual_v2",
+    provider: "openrouter",
+    upstreamModelId: "openrouter/free",
     price: process.env.PRICE_ELEVENLABS || "$0.20",
     limits: {
       maxPromptChars: 1000,
