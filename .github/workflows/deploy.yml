@@ -77,11 +77,20 @@ jobs:
             systemctl restart moltworld
             
             echo "Step 5: Verifying health check on port 3402..."
-            sleep 3
-            if curl -fsS http://127.0.0.1:3402/health > /dev/null; then
+            READY=0
+            for i in $(seq 1 15); do
+              if curl -fsS http://127.0.0.1:3402/health > /dev/null 2>&1; then
+                READY=1
+                break
+              fi
+              echo "Waiting for gateway initialization ($i/15)..."
+              sleep 1
+            done
+
+            if [ "$READY" -eq 1 ]; then
               echo ">>> SUCCESS: Moltworld is active, healthy, and serving requests on port 3402!"
             else
-              echo ">>> ERROR: Health check failed. Printing journal logs:"
+              echo ">>> ERROR: Gateway failed to report healthy within 15s. Printing journal logs:"
               journalctl -u moltworld -n 30 --no-pager
               exit 1
             fi
