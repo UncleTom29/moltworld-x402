@@ -91,11 +91,18 @@ export function handleListModels(c: Context): Response {
   });
 }
 
+function extractModelSlug(c: Context): string {
+  const param = c.req.param("model");
+  if (param) return param;
+  const match = c.req.path.match(/^\/v1\/models\/([^/]+)\//);
+  return match ? match[1] : "";
+}
+
 // ----------------------------------------------------
 // Chat Completion Handler
 // ----------------------------------------------------
 export async function handleChatCompletion(c: Context): Promise<Response> {
-  const modelSlug = c.req.param("model") || "";
+  const modelSlug = extractModelSlug(c);
   const model = defaultModelRegistry.getModel(modelSlug);
 
   if (!model || !model.enabled || model.modality !== "chat") {
@@ -180,7 +187,7 @@ export async function handleChatCompletion(c: Context): Promise<Response> {
 // Image Generation Handler
 // ----------------------------------------------------
 export async function handleImageGeneration(c: Context): Promise<Response> {
-  const modelSlug = c.req.param("model") || "";
+  const modelSlug = extractModelSlug(c);
   const model = defaultModelRegistry.getModel(modelSlug);
 
   if (!model || !model.enabled || model.modality !== "image") {
@@ -268,7 +275,7 @@ export async function handleImageGeneration(c: Context): Promise<Response> {
 // Voice / Audio Speech Handler
 // ----------------------------------------------------
 export async function handleAudioSpeech(c: Context): Promise<Response> {
-  const modelSlug = c.req.param("model") || "";
+  const modelSlug = extractModelSlug(c);
   const model = defaultModelRegistry.getModel(modelSlug);
 
   if (!model || !model.enabled || model.modality !== "voice") {
@@ -356,7 +363,7 @@ export async function handleAudioSpeech(c: Context): Promise<Response> {
 // Video Generation Handler
 // ----------------------------------------------------
 export async function handleVideoGeneration(c: Context): Promise<Response> {
-  const modelSlug = c.req.param("model") || "";
+  const modelSlug = extractModelSlug(c);
   const model = defaultModelRegistry.getModel(modelSlug);
 
   if (!model || !model.enabled || model.modality !== "video") {

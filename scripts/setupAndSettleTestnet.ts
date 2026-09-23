@@ -5,8 +5,8 @@ import { wrapFetchWithPayment, x402Client, decodePaymentResponseHeader } from "@
 export const TESTNET_CONFIG = {
   usdcAsaId: 10458941n,
   client: {
-    address: "CLV53WTEJDVJVGJT3HKBL5CSRFOCMZDBSVGO2FB6S5W3MS3H5QRAON745E",
-    secretKeyBase64: "8NvabEkFGk3I90jHex/PhjlLnTyi85W0/mveIaFuiMES693aZEjqmpkz2dQV9FKJXCZkYZVM7RQ+l222S2fsIg==",
+    address: "WEXP3TE74ID3Y752NCR2ODZYJCD4CZPU2RAWMEGP7FB4IGBHDMSVUJTR3M",
+    secretKeyBase64: "jZvhqFwi5xoIvSBxsKkaEN7Eq2j5+ywSkOVS5kU+dyaxLv3Mn+IHvH+6aKOnDzhIh8Fl9NRBZhDP+UPEGCcbJQ==",
   },
   merchant: {
     address: "TQWEL54TCBYH3QJLN2OU2QH7XZTHRDZMF2YQIU5B7W2HK6GS7I2TWHDMXU",
