@@ -27,7 +27,7 @@ describe("Moltworld x402 Gateway - Free Routes & Modality Filtering", () => {
     expect(html).toContain("x402");
   });
 
-  it("GET /health returns 200 OK with 10 enabled models and zero exposed secrets", async () => {
+  it("GET /health returns 200 OK with 22 enabled models and zero exposed secrets", async () => {
     const res = await app.fetch(new Request("http://localhost/health"));
     expect(res.status).toBe(200);
 
@@ -40,8 +40,8 @@ describe("Moltworld x402 Gateway - Free Routes & Modality Filtering", () => {
     expect(body.usdc_asset_id).toBe(USDC_TESTNET_ASA_ID);
     expect(body.pay_to).toBe(config.payToAddress);
     expect(body.tag).toBe("x402-global-challenge");
-    expect(body.enabled_models).toBe(10);
-    expect(body.models_by_modality.chat).toBe(10);
+    expect(body.enabled_models).toBe(22);
+    expect(body.models_by_modality.chat).toBe(22);
     expect(body.uptime_seconds).toBeGreaterThanOrEqual(0);
 
     // Ensure no secrets leaked
@@ -65,14 +65,14 @@ describe("Moltworld x402 Gateway - Free Routes & Modality Filtering", () => {
     setGatewayReady(true);
   });
 
-  it("GET /v1/models returns 200 OK with all 10 enabled models", async () => {
+  it("GET /v1/models returns 200 OK with all 22 enabled models", async () => {
     const res = await app.fetch(new Request("http://localhost/v1/models"));
     expect(res.status).toBe(200);
 
     const body = (await res.json()) as any;
     expect(body.object).toBe("list");
     expect(Array.isArray(body.data)).toBe(true);
-    expect(body.data.length).toBe(10);
+    expect(body.data.length).toBe(22);
 
     const slugs = body.data.map((m: any) => m.id);
     expect(slugs).toContain("gpt");
@@ -85,6 +85,18 @@ describe("Moltworld x402 Gateway - Free Routes & Modality Filtering", () => {
     expect(slugs).toContain("deepseek");
     expect(slugs).toContain("deepseek-r1");
     expect(slugs).toContain("llama");
+    expect(slugs).toContain("gpt-5.4-pro");
+    expect(slugs).toContain("gpt-5.2-pro");
+    expect(slugs).toContain("gpt-5-pro");
+    expect(slugs).toContain("o3-pro");
+    expect(slugs).toContain("claude-fable-5.1");
+    expect(slugs).toContain("claude-opus-5");
+    expect(slugs).toContain("claude-opus-5.5");
+    expect(slugs).toContain("gpt-5.4");
+    expect(slugs).toContain("gpt-5.2");
+    expect(slugs).toContain("gemini-3.1-pro");
+    expect(slugs).toContain("gpt-5.6-terra");
+    expect(slugs).toContain("claude-sonnet-5");
   });
 
   it("verifies accurate model identity: Claude Sonnet 4.5 and Claude 3 Haiku", async () => {
@@ -111,10 +123,22 @@ describe("Moltworld x402 Gateway - Free Routes & Modality Filtering", () => {
       deepseek: { prompt: 0.32, completion: 0.89 },
       "deepseek-r1": { prompt: 0.70, completion: 2.50 },
       llama: { prompt: 0.10, completion: 0.32 },
+      "gpt-5.4-pro": { prompt: 30.00, completion: 180.00 },
+      "gpt-5.2-pro": { prompt: 21.00, completion: 168.00 },
+      "gpt-5-pro": { prompt: 15.00, completion: 120.00 },
+      "o3-pro": { prompt: 20.00, completion: 80.00 },
+      "claude-fable-5.1": { prompt: 10.00, completion: 50.00 },
+      "claude-opus-5": { prompt: 5.00, completion: 25.00 },
+      "claude-opus-5.5": { prompt: 4.00, completion: 20.00 },
+      "gpt-5.4": { prompt: 2.50, completion: 15.00 },
+      "gpt-5.2": { prompt: 1.75, completion: 14.00 },
+      "gemini-3.1-pro": { prompt: 2.00, completion: 12.00 },
+      "gpt-5.6-terra": { prompt: 2.00, completion: 12.00 },
+      "claude-sonnet-5": { prompt: 2.00, completion: 10.00 },
     };
 
     const models = defaultModelRegistry.getEnabledModels();
-    expect(models.length).toBe(10);
+    expect(models.length).toBe(22);
 
     for (const model of models) {
       const rate = rates[model.slug];

@@ -292,7 +292,7 @@ export function renderLandingPage(c: Context): Response {
 
     <section class="hero">
       <h1>One API for AI models and agents.</h1>
-      <p>Access Claude Sonnet 4.5, GPT-4o, Gemini 2.5, DeepSeek R1, and Llama 3.3. Pay per request in USDC on Algorand. Zero subscriptions.</p>
+      <p>Access GPT-5.4 Pro, Claude Opus 5.5, Gemini 3.1 Pro, o3 Pro, DeepSeek R1, and 20+ frontier models. Pay per request in USDC on Algorand. Zero subscriptions.</p>
       <div class="network-pill">
         Settlement: <strong>Algorand USDC</strong> (ASA: ${usdcAsa}) via GoPlausible Facilitator
       </div>
