@@ -9,6 +9,7 @@
     "dev": "tsx watch src/server.ts",
     "test": "vitest run",
     "test:client": "tsx src/client/testClient.ts",
+    "test:settle": "tsx scripts/setupAndSettleTestnet.ts",
     "build": "tsc",
     "start:prod": "node dist/server.js",
     "deploy:contabo": "bash scripts/deploy.sh contabo",

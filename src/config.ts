@@ -19,7 +19,7 @@ export const USDC_MAINNET_ASA_ID = "31566704";
 import { Network } from "@x402/core/types";
 
 // Default testnet payTo address (if AVM_ADDRESS is not set during testnet development)
-const DEFAULT_TESTNET_PAYTO = "XFYEO7VOP3KX2YHZLQBQLM6L565IQJWYZGNG36OF44GYW5FF2FQXURFR7Q";
+const DEFAULT_TESTNET_PAYTO = "TQWEL54TCBYH3QJLN2OU2QH7XZTHRDZMF2YQIU5B7W2HK6GS7I2TWHDMXU";
 
 export interface GatewayConfig {
   env: string;
