@@ -20,6 +20,7 @@ import {
   setGatewayReady,
 } from "./routes/api.js";
 import { defaultModelRegistry } from "./models/registry.js";
+import { getLogoBytes, getFaviconBytes, getFavicon32Bytes } from "./assets/images.js";
 
 export function createApp(): {
   app: Hono;
@@ -68,6 +69,52 @@ export function createApp(): {
   app.get("/", renderLandingPage);
   app.get("/health", handleHealth);
   app.get("/v1/models", handleListModels);
+
+  // Static brand assets (Logo & Favicon)
+  app.get("/logo.png", () => {
+    return new Response(getLogoBytes() as unknown as BodyInit, {
+      headers: {
+        "Content-Type": "image/png",
+        "Cache-Control": "public, max-age=31536000, immutable",
+      },
+    });
+  });
+
+  app.get("/favicon.png", () => {
+    return new Response(getFaviconBytes() as unknown as BodyInit, {
+      headers: {
+        "Content-Type": "image/png",
+        "Cache-Control": "public, max-age=31536000, immutable",
+      },
+    });
+  });
+
+  app.get("/favicon-32.png", () => {
+    return new Response(getFavicon32Bytes() as unknown as BodyInit, {
+      headers: {
+        "Content-Type": "image/png",
+        "Cache-Control": "public, max-age=31536000, immutable",
+      },
+    });
+  });
+
+  app.get("/favicon.ico", () => {
+    return new Response(getFavicon32Bytes() as unknown as BodyInit, {
+      headers: {
+        "Content-Type": "image/x-icon",
+        "Cache-Control": "public, max-age=31536000, immutable",
+      },
+    });
+  });
+
+  app.get("/apple-touch-icon.png", () => {
+    return new Response(getLogoBytes() as unknown as BodyInit, {
+      headers: {
+        "Content-Type": "image/png",
+        "Cache-Control": "public, max-age=31536000, immutable",
+      },
+    });
+  });
 
   // x402 Payment Middleware for Protected Routes
   app.use(paymentMiddleware(routes, server, undefined, undefined, false));

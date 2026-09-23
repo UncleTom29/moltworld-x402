@@ -25,6 +25,33 @@ describe("Moltworld x402 Gateway - Free Routes & Modality Filtering", () => {
     expect(html).toContain("One API for AI models and agents");
     expect(html).toContain("Algorand USDC");
     expect(html).toContain("x402");
+    expect(html).toContain("/logo.png");
+    expect(html).toContain("/favicon.png");
+    expect(html).toContain("/favicon.ico");
+  });
+
+  it("serves static logo and favicon assets with valid cache headers", async () => {
+    // /logo.png
+    const logoRes = await app.fetch(new Request("http://localhost/logo.png"));
+    expect(logoRes.status).toBe(200);
+    expect(logoRes.headers.get("content-type")).toBe("image/png");
+    expect(logoRes.headers.get("cache-control")).toContain("public");
+    const logoBuf = await logoRes.arrayBuffer();
+    expect(logoBuf.byteLength).toBeGreaterThan(10000);
+
+    // /favicon.png
+    const favPngRes = await app.fetch(new Request("http://localhost/favicon.png"));
+    expect(favPngRes.status).toBe(200);
+    expect(favPngRes.headers.get("content-type")).toBe("image/png");
+    const favPngBuf = await favPngRes.arrayBuffer();
+    expect(favPngBuf.byteLength).toBeGreaterThan(1000);
+
+    // /favicon.ico
+    const favIcoRes = await app.fetch(new Request("http://localhost/favicon.ico"));
+    expect(favIcoRes.status).toBe(200);
+    expect(favIcoRes.headers.get("content-type")).toBe("image/x-icon");
+    const favIcoBuf = await favIcoRes.arrayBuffer();
+    expect(favIcoBuf.byteLength).toBeGreaterThan(1000);
   });
 
   it("GET /health returns 200 OK with 22 enabled models and zero exposed secrets", async () => {

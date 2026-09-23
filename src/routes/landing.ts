@@ -14,6 +14,15 @@ export function renderLandingPage(c: Context): Response {
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Moltworld — Multimodal AI Gateway with x402 on Algorand</title>
   <meta name="description" content="One API for AI models and autonomous agents. Chat, Image, Voice, and Video. Pay per request in USDC on Algorand. Zero subscriptions.">
+  <link rel="icon" type="image/png" sizes="128x128" href="/favicon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
+  <link rel="shortcut icon" href="/favicon.ico">
+  <link rel="apple-touch-icon" href="/logo.png">
+  <meta property="og:title" content="Moltworld — Multimodal AI Gateway with x402 on Algorand">
+  <meta property="og:description" content="One API for AI models and autonomous agents. Chat, Image, Voice, and Video. Pay per request in USDC on Algorand. Zero subscriptions.">
+  <meta property="og:image" content="https://moltworld.xyz/logo.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:image" content="https://moltworld.xyz/logo.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -52,10 +61,30 @@ export function renderLandingPage(c: Context): Response {
       border-bottom: 1px solid var(--card-border);
     }
 
-    .logo-area { display: flex; align-items: center; gap: 0.75rem; }
+    .logo-area {
+      display: flex;
+      align-items: center;
+      gap: 0.85rem;
+      text-decoration: none;
+      cursor: pointer;
+    }
+
+    .logo-img {
+      width: 42px;
+      height: 42px;
+      border-radius: 10px;
+      object-fit: cover;
+      box-shadow: 0 0 18px rgba(0, 210, 170, 0.22);
+      transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .logo-area:hover .logo-img {
+      transform: scale(1.08) rotate(2deg);
+      box-shadow: 0 0 28px rgba(0, 210, 170, 0.5);
+    }
 
     .logo-text {
-      font-size: 1.25rem;
+      font-size: 1.35rem;
       font-weight: 700;
       letter-spacing: -0.02em;
       color: #fff;
@@ -281,9 +310,10 @@ export function renderLandingPage(c: Context): Response {
 <body>
   <div class="container">
     <header>
-      <div class="logo-area">
+      <a href="/" class="logo-area" aria-label="Moltworld Home">
+        <img src="/logo.png" alt="Moltworld Logo" class="logo-img" width="42" height="42" />
         <span class="logo-text">Moltworld</span>
-      </div>
+      </a>
       <div class="badge-status">
         <span class="status-dot"></span>
         <span>Online &middot; ${networkName}</span>
