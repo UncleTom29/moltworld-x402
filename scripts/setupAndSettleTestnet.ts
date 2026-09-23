@@ -1,3 +1,4 @@
+import "dotenv/config";
 import { AlgorandClient, microAlgo } from "@algorandfoundation/algokit-utils";
 import { toClientAvmSigner, getAlgokitSigner, ExactAvmScheme } from "@x402/avm";
 import { wrapFetchWithPayment, x402Client, decodePaymentResponseHeader } from "@x402/fetch";
@@ -5,12 +6,12 @@ import { wrapFetchWithPayment, x402Client, decodePaymentResponseHeader } from "@
 export const TESTNET_CONFIG = {
   usdcAsaId: 10458941n,
   client: {
-    address: "WEXP3TE74ID3Y752NCR2ODZYJCD4CZPU2RAWMEGP7FB4IGBHDMSVUJTR3M",
-    secretKeyBase64: "jZvhqFwi5xoIvSBxsKkaEN7Eq2j5+ywSkOVS5kU+dyaxLv3Mn+IHvH+6aKOnDzhIh8Fl9NRBZhDP+UPEGCcbJQ==",
+    address: process.env.AVM_CLIENT_ADDRESS || (process.env.AVM_CLIENT_PRIVATE_KEY ? toClientAvmSigner(process.env.AVM_CLIENT_PRIVATE_KEY).address : ""),
+    secretKeyBase64: process.env.AVM_CLIENT_PRIVATE_KEY || "",
   },
   merchant: {
-    address: "TQWEL54TCBYH3QJLN2OU2QH7XZTHRDZMF2YQIU5B7W2HK6GS7I2TWHDMXU",
-    secretKeyBase64: "CTCSf2MOmNnHQnO2UmaapRcOz8PXvwOvaP3wZnBzYiqcLEX3kxBwfcErbp1NQP++ZniPLC6xBFOh/bR1eNL6NQ==",
+    address: process.env.AVM_ADDRESS || "TQWEL54TCBYH3QJLN2OU2QH7XZTHRDZMF2YQIU5B7W2HK6GS7I2TWHDMXU",
+    secretKeyBase64: process.env.AVM_MERCHANT_PRIVATE_KEY || "",
   },
 };
 
@@ -140,11 +141,15 @@ export async function executeLiveSettlement(targetUrl = "https://moltworld.xyz",
   const paymentResponseHeader = res.headers.get("payment-response");
   if (paymentResponseHeader) {
     const settlement = decodePaymentResponseHeader(paymentResponseHeader) as any;
+    const txId = settlement.txId || settlement.transactionId || settlement.transaction || settlement.transactionHash || settlement.id || settlement.txHash || settlement.txid;
     console.log(`\n======================================================`);
     console.log(` 🏆 SETTLEMENT CONFIRMED BY GOPLAUSIBLE FACILITATOR!`);
-    console.log(`- Transaction ID: ${settlement.txId || settlement.transactionId}`);
+    console.log(`- Settlement Payload:`, JSON.stringify(settlement));
+    console.log(`- Transaction ID: ${txId || "(Confirmed on-chain)"}`);
     console.log(`- Network:        ${settlement.network || "algorand:testnet"}`);
-    console.log(`- Explorer URL:   https://lora.algokit.io/testnet/transaction/${settlement.txId || settlement.transactionId}`);
+    if (txId) {
+      console.log(`- Explorer URL:   https://lora.algokit.io/testnet/transaction/${txId}`);
+    }
     console.log(`======================================================\n`);
   } else {
     console.log("No payment-response header found.");

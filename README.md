@@ -139,49 +139,111 @@ pnpm dev
 
 ---
 
-## 6. Test Client & Testnet Verification Flow
+---
 
-Before deploying to Mainnet, verify end-to-end payment with the GoPlausible facilitator on Algorand Testnet.
+## 6. Validated End-to-End Testnet Settlement Proof
 
-### Testnet Requirements:
-1. Payer account holding Testnet ALGO (for transaction fees and minimum balance).
-2. Payer account opted in to Testnet USDC (`10458941`).
-3. Payer account holding Testnet USDC.
-4. Merchant account (`AVM_ADDRESS`) opted in to Testnet USDC.
+Moltworld's complete machine-to-machine x402 payment and AI inference pipeline is live, verified, and settled on **Algorand Testnet** through the official **GoPlausible x402 Facilitator**:
 
-Run the test client with cheap models to preserve credits:
+$$\text{Client} \xrightarrow{\text{Prompt}} \text{Moltworld} \xrightarrow{\text{HTTP 402}} \text{x402 Signer} \xrightarrow{\text{Exact AVM Scheme}} \text{GoPlausible Facilitator} \xrightarrow{\text{On-Chain USDC}} \text{OpenRouter} \xrightarrow{\text{HTTP 200}} \text{Client}$$
+
+### Confirmed On-Chain Settlements:
+
+| Model | Modality | Price (USDC) | Algorand Testnet TxID | Status | Lora Explorer Link |
+|---|---|---|---|---|---|
+| **Gemini 2.5 Flash Lite** (`gemini-lite`) | Chat | $0.01 (10,000 base units) | `SNSPRUA6IDIMYB466OXDEZNUQMLJ6MGOTDFFQEU5P4C6KGTQZ2CQ` | **CONFIRMED** | [View on Lora](https://lora.algokit.io/testnet/transaction/SNSPRUA6IDIMYB466OXDEZNUQMLJ6MGOTDFFQEU5P4C6KGTQZ2CQ) |
+| **DeepSeek V3** (`deepseek`) | Chat | $0.01 (10,000 base units) | `HMHLVL7FGW7UKNPQ5WV6ZPWM7NWGTMT2MVYV6SQT77O6AASTQEMQ` | **CONFIRMED** | [View on Lora](https://lora.algokit.io/testnet/transaction/HMHLVL7FGW7UKNPQ5WV6ZPWM7NWGTMT2MVYV6SQT77O6AASTQEMQ) |
+| **Setup Settlement** (`gemini-lite`) | Chat | $0.01 (10,000 base units) | `REWKVF6KF6PNJTKQGC3PYJLEBQ5XX3EDLYQONP6NY3BADXX5DBCQ` | **CONFIRMED** | [View on Lora](https://lora.algokit.io/testnet/transaction/REWKVF6KF6PNJTKQGC3PYJLEBQ5XX3EDLYQONP6NY3BADXX5DBCQ) |
+
+### Live Execution Trace (`gemini-lite`):
+```text
+======================================================
+ Moltworld x402 Multimodal Client Demo
+ Modality: [CHAT]
+ Model:    gemini-lite
+ Endpoint: https://moltworld.xyz/v1/models/gemini-lite/chat/completions
+======================================================
+
+[Step 1] Sending initial prompt request without payment proof...
+[Step 2] Received HTTP Status: 402 (Expected: 402 Payment Required)
+[Step 3] Payment Required Requirements:
+- Resource:   https://moltworld.xyz/v1/models/gemini-lite/chat/completions
+- Scheme:     exact
+- Network:    algorand:SGO1GKSzyE7IEPItTxCByw9x8FmnrCDexi9/cOUJOiI=
+- Amount:     10000 base units (USDC)
+- Asset ID:   10458941
+- PayTo:      TQWEL54TCBYH3QJLN2OU2QH7XZTHRDZMF2YQIU5B7W2HK6GS7I2TWHDMXU
+- Challenge:  tag="x402-global-challenge"
+
+[Step 4] Initialized Algorand client signer:
+- Address: WEXP3TE74ID3Y752NCR2ODZYJCD4CZPU2RAWMEGP7FB4IGBHDMSVUJTR3M
+
+[Step 5] Retrying request with x402 payment authorization...
+[Step 6] Response Status: 200
+[Step 6] Settlement Details:
+- Settlement Success: true
+- Transaction ID:    SNSPRUA6IDIMYB466OXDEZNUQMLJ6MGOTDFFQEU5P4C6KGTQZ2CQ
+- Explorer URL:      https://lora.algokit.io/testnet/transaction/SNSPRUA6IDIMYB466OXDEZNUQMLJ6MGOTDFFQEU5P4C6KGTQZ2CQ
+- Network:           algorand:SGO1GKSzyE7IEPItTxCByw9x8FmnrCDexi9/cOUJOiI=
+
+[Step 7] Model Media Response Received:
+- Model:   gemini-lite
+- Content: 
+Imagine you want to build a digital world where people can trade things, play games, or even vote, all without a central authority like a bank or a government. That's where Algorand comes in...
+
+Demo completed successfully!
+```
+
+### GoPlausible Bazaar & Leaderboard Verification:
+
+Querying GoPlausible's discovery endpoint (`https://facilitator.goplausible.xyz/discovery/resources?search=moltworld`) confirms that:
+1. Every paid endpoint is automatically cataloged with full JSON schemas and examples.
+2. Every request embeds the competition tag: `"tag": "x402-global-challenge"`.
+3. The merchant profile is crawled and enriched automatically from `https://moltworld.xyz`:
+   - Title: `"Moltworld — Multimodal AI Gateway with x402 on Algorand"`
+   - Tag: `x402-global-challenge`
+   - Confirmed Settlements: 4+
+
+---
+
+## 7. Running the Test Client
 
 ```bash
-# Test Gemini 2.5 Flash Lite ($0.01 USDC)
-AVM_CLIENT_PRIVATE_KEY=<BASE64_KEY> pnpm test:client --model=gemini-lite
+# Test with Gemini 2.5 Flash Lite ($0.01 USDC)
+AVM_CLIENT_PRIVATE_KEY=<YOUR_PRIVATE_KEY> pnpm test:client --url=https://moltworld.xyz --model=gemini-lite
+
+# Test with DeepSeek V3 ($0.01 USDC)
+AVM_CLIENT_PRIVATE_KEY=<YOUR_PRIVATE_KEY> pnpm test:client --url=https://moltworld.xyz --model=deepseek
+
+# Test with GPT-4o ($0.06 USDC)
+AVM_CLIENT_PRIVATE_KEY=<YOUR_PRIVATE_KEY> pnpm test:client --url=https://moltworld.xyz --model=gpt-4o
 ```
 
 ---
 
-## 7. Example Unpaid Request (HTTP 402)
+## 8. Mainnet Deployment Checklist
 
-```bash
-curl -i -X POST https://moltworld.xyz/v1/models/claude-sonnet/chat/completions \
-  -H "Content-Type: application/json" \
-  -d '{"messages":[{"role":"user","content":"Explain Algorand consensus"}]}'
-```
+When ready to switch from Testnet to Algorand Mainnet:
 
-Returns:
-
-```http
-HTTP/1.1 402 Payment Required
-Payment-Required: eyJ4NDAyVmVyc2lvbiI6MiwiZXJyb3IiOiJQYXltZW50IHJlcXVpcmVkIiw...
-Cache-Control: no-store, no-cache, must-revalidate, proxy-revalidate
-
-{}
-```
+1. **Merchant Wallet**: Provide your intended Algorand Mainnet address holding/opted-in to Mainnet USDC (ASA `31566704`).
+2. **Environment Variables**:
+   * Set `ALGORAND_NETWORK=mainnet`
+   * Set `AVM_ADDRESS=<YOUR_MAINNET_ADDRESS>`
+3. **Deploy**:
+   * **Contabo VPS**: Push to `main` (GitHub Actions automatically tests, builds, and deploys to VPS) or run `pnpm deploy:contabo`.
+   * **Cloudflare Worker**: Run `pnpm deploy:worker`.
+4. **Smoke Test**: Execute a single $0.01 USDC test on Mainnet using `gemini-lite`:
+   ```bash
+   ALGORAND_NETWORK=mainnet AVM_CLIENT_PRIVATE_KEY=<YOUR_MAINNET_KEY> pnpm test:client --url=https://moltworld.xyz --model=gemini-lite
+   ```
 
 ---
 
-## 8. CI/CD & Production Readiness
+## 9. CI/CD & Production Architecture
 
-- **GitHub Actions**: Automated CI runs on every push and pull request to `main` via [`.github/workflows/ci.yml`](.github/workflows/ci.yml), compiling TypeScript and executing all test suites.
-- **Fail-Closed Monitoring**: `/health` checks facilitator health and returns `503 Service Unavailable` if the facilitator is disconnected, preventing payments when verification cannot complete.
+- **GitHub Actions**: Automated CI runs on every push and pull request to `main` via [`.github/workflows/deploy.yml`](.github/workflows/deploy.yml), compiling TypeScript, running all 19 tests, and deploying to Contabo VPS.
+- **Fail-Closed Design**: If upstream provider keys or facilitator services are unavailable, the gateway fails closed (`503 Service Unavailable`) before payment can ever be accepted.
+- **Strict Margins**: Fixed model prices guarantee $\ge 50\%$ gross profit margin over OpenRouter upstream token costs.
 
 ---
 

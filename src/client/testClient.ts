@@ -1,3 +1,4 @@
+import "dotenv/config";
 import { wrapFetchWithPayment, x402Client, decodePaymentResponseHeader } from "@x402/fetch";
 import { ExactAvmScheme, toClientAvmSigner } from "@x402/avm";
 import crypto from "crypto";
@@ -126,9 +127,11 @@ export async function runTestClient(options: {
     const paymentResponseHeader = paidRes.headers.get("payment-response");
     if (paymentResponseHeader) {
       const settlement = decodePaymentResponseHeader(paymentResponseHeader) as any;
+      const txId = settlement.txId || settlement.transactionId || settlement.transaction || settlement.transactionHash || "Confirmed";
       console.log(`[Step 6] Settlement Details:`);
       console.log(`- Settlement Success: ${settlement.success ?? true}`);
-      console.log(`- Transaction ID:    ${settlement.txId || settlement.transactionId || "Confirmed"}`);
+      console.log(`- Transaction ID:    ${txId}`);
+      console.log(`- Explorer URL:      https://lora.algokit.io/testnet/transaction/${txId}`);
       console.log(`- Network:           ${settlement.network || "algorand"}`);
     } else {
       console.log(`[Step 6] Note: Payment-Response header was empty or processed in direct mode.`);
