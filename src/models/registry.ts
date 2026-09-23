@@ -74,10 +74,10 @@ export const INITIAL_MODELS: ModelDefinition[] = [
   },
   {
     slug: "claude",
-    displayName: "Claude 3.5 Haiku",
+    displayName: "Claude 3 Haiku",
     modality: "chat",
     provider: process.env.CLAUDE_PROVIDER || "openrouter",
-    upstreamModelId: process.env.CLAUDE_UPSTREAM_MODEL || "anthropic/claude-3-5-haiku-20241022",
+    upstreamModelId: process.env.CLAUDE_UPSTREAM_MODEL || "anthropic/claude-3-haiku",
     price: process.env.PRICE_CLAUDE || "$0.03",
     limits: {
       maxInputTokens: 4096,
@@ -94,7 +94,7 @@ export const INITIAL_MODELS: ModelDefinition[] = [
     displayName: "Claude 3.7 Sonnet",
     modality: "chat",
     provider: process.env.CLAUDE_SONNET_PROVIDER || "openrouter",
-    upstreamModelId: process.env.CLAUDE_SONNET_UPSTREAM_MODEL || "anthropic/claude-3-7-sonnet",
+    upstreamModelId: process.env.CLAUDE_SONNET_UPSTREAM_MODEL || "anthropic/claude-sonnet-4.5",
     price: process.env.PRICE_CLAUDE_SONNET || "$0.06",
     limits: {
       maxInputTokens: 8192,
@@ -108,10 +108,10 @@ export const INITIAL_MODELS: ModelDefinition[] = [
   },
   {
     slug: "gemini",
-    displayName: "Gemini 2.0 Flash",
+    displayName: "Gemini 2.5 Flash",
     modality: "chat",
     provider: process.env.GEMINI_PROVIDER || "openrouter",
-    upstreamModelId: process.env.GEMINI_UPSTREAM_MODEL || "google/gemini-2.0-flash-001",
+    upstreamModelId: process.env.GEMINI_UPSTREAM_MODEL || "google/gemini-2.5-flash",
     price: process.env.PRICE_GEMINI || "$0.02",
     limits: {
       maxInputTokens: 4096,
@@ -124,11 +124,28 @@ export const INITIAL_MODELS: ModelDefinition[] = [
     tags: ["chat", "gemini", "google", "x402-global-challenge"],
   },
   {
+    slug: "gemini-lite",
+    displayName: "Gemini 2.5 Flash Lite",
+    modality: "chat",
+    provider: "openrouter",
+    upstreamModelId: "google/gemini-2.5-flash-lite",
+    price: process.env.PRICE_GEMINI_LITE || "$0.01",
+    limits: {
+      maxInputTokens: 4096,
+      maxOutputTokens: 2048,
+      maxMessages: 50,
+      maxPromptChars: 32000,
+    },
+    enabled: true,
+    description: "Gemini 2.5 Flash Lite ultra-low latency & cost-efficient inference through Moltworld.",
+    tags: ["chat", "gemini", "google", "lite", "cheap", "x402-global-challenge"],
+  },
+  {
     slug: "gemini-pro",
-    displayName: "Gemini 2.0 Pro",
+    displayName: "Gemini 2.5 Pro",
     modality: "chat",
     provider: process.env.GEMINI_PRO_PROVIDER || "openrouter",
-    upstreamModelId: process.env.GEMINI_PRO_UPSTREAM_MODEL || "google/gemini-2.0-pro-exp-02-05:free",
+    upstreamModelId: process.env.GEMINI_PRO_UPSTREAM_MODEL || "google/gemini-2.5-pro",
     price: process.env.PRICE_GEMINI_PRO || "$0.04",
     limits: {
       maxInputTokens: 8192,
@@ -137,7 +154,7 @@ export const INITIAL_MODELS: ModelDefinition[] = [
       maxPromptChars: 64000,
     },
     enabled: true,
-    description: "Gemini 2.0 Pro frontier reasoning and complex analysis through Moltworld.",
+    description: "Gemini 2.5 Pro frontier reasoning and complex analysis through Moltworld.",
     tags: ["chat", "gemini", "google", "pro", "x402-global-challenge"],
   },
   {
@@ -227,8 +244,8 @@ export const INITIAL_MODELS: ModelDefinition[] = [
     slug: "dall-e-3",
     displayName: "DALL-E 3",
     modality: "image",
-    provider: "openai",
-    upstreamModelId: "dall-e-3",
+    provider: "openrouter",
+    upstreamModelId: "openai/gpt-5-image-mini",
     price: process.env.PRICE_DALLE3 || "$0.05",
     limits: {
       maxPromptChars: 4000,

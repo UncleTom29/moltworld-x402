@@ -31,7 +31,7 @@ describe("Moltworld x402 Gateway - Free Routes & Modality Filtering", () => {
     expect(html).toContain("data-modality=\"video\"");
   });
 
-  it("GET /health returns 200 OK with health status, 19 models, 4 modalities, and zero exposed secrets", async () => {
+  it("GET /health returns 200 OK with health status, 20 models, 4 modalities, and zero exposed secrets", async () => {
     const res = await app.fetch(new Request("http://localhost/health"));
     expect(res.status).toBe(200);
 
@@ -44,9 +44,9 @@ describe("Moltworld x402 Gateway - Free Routes & Modality Filtering", () => {
     expect(body.pay_to).toBe(config.payToAddress);
     expect(body.tag).toBe("x402-global-challenge");
     expect(body.modalities_supported).toEqual(["chat", "image", "voice", "video"]);
-    expect(body.enabled_models).toBe(19);
+    expect(body.enabled_models).toBe(20);
     expect(body.models_by_modality).toEqual({
-      chat: 9,
+      chat: 10,
       image: 4,
       voice: 3,
       video: 3,
@@ -60,14 +60,14 @@ describe("Moltworld x402 Gateway - Free Routes & Modality Filtering", () => {
     expect(jsonStr).not.toContain("secret");
   });
 
-  it("GET /v1/models returns 200 OK with all 19 models across all 4 modalities", async () => {
+  it("GET /v1/models returns 200 OK with all 20 models across all 4 modalities", async () => {
     const res = await app.fetch(new Request("http://localhost/v1/models"));
     expect(res.status).toBe(200);
 
     const body = (await res.json()) as any;
     expect(body.object).toBe("list");
     expect(Array.isArray(body.data)).toBe(true);
-    expect(body.data.length).toBe(19);
+    expect(body.data.length).toBe(20);
 
     const modalities = new Set(body.data.map((m: any) => m.modality));
     expect(modalities.has("chat")).toBe(true);
