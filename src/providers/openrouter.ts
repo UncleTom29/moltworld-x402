@@ -10,13 +10,11 @@ import {
   VideoGenerationResponse,
 } from "./types.js";
 
-// Priority free models router on OpenRouter
+// Priority free models router on OpenRouter (OpenRouter allows max 3 models in fallback array)
 const OPENROUTER_FREE_MODELS = [
   process.env.OPENROUTER_FREE_MODEL || "openrouter/free",
   "google/gemma-4-26b-a4b-it:free",
-  "qwen/qwen3.8-27b:free",
   "openrouter/auto",
-  "google/gemini-2.5-flash-lite",
 ];
 
 function generateWavBase64(durationSeconds: number, text: string): string {
