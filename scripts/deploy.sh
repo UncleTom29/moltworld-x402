@@ -20,13 +20,12 @@ if [ "$TARGET" = "worker" ]; then
     pnpm add -D wrangler
   fi
   pnpm wrangler deploy
-elif [ "$TARGET" = "docker" ]; then
-  echo "Step 3: Building and starting Docker container..."
-  docker compose build
-  docker compose up -d
-  echo "Moltworld container running on http://localhost:3000"
+elif [ "$TARGET" = "contabo" ]; then
+  echo "Step 3: Deploying directly to Contabo VPS (95.111.229.139)..."
+  ssh root@95.111.229.139 "cd /opt/moltworld && git pull origin main && pnpm install --frozen-lockfile && pnpm build && systemctl restart moltworld"
+  echo "Moltworld updated and running on Contabo VPS (port 3402)!"
 else
-  echo "Unknown target: $TARGET. Use 'worker' or 'docker'."
+  echo "Unknown target: $TARGET. Use 'worker' or 'contabo'."
   exit 1
 fi
 
