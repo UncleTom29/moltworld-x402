@@ -99,36 +99,25 @@ All 10 active models route directly to verified OpenRouter upstream endpoints. M
 
 ## 4. Deploying to Contabo VPS (with Cloudflare DNS)
 
-See [`deploy/README.md`](deploy/README.md) for full instructions.
+Moltworld runs natively under **Node.js 22** as a systemd service (`moltworld.service`) listening on conflict-free port **`3402`**, coexisting cleanly alongside other projects on the VPS.
 
-### Quick Start on Contabo VPS (Ubuntu/Debian):
+### Live Server Architecture on Contabo VPS (`95.111.229.139`):
+- **App Path**: `/opt/moltworld`
+- **Port**: `3402` (bound to `127.0.0.1:3402`, no external exposure)
+- **Nginx Config**: `/etc/nginx/sites-available/moltworld.conf` (proxies `moltworld.xyz` to `127.0.0.1:3402` with HTTP/2, SSL, and `proxy_buffering off`)
+- **Systemd Daemon**: `systemctl status moltworld`
+- **Continuous Deployment**: Automated on push to `main` via GitHub Actions (`.github/workflows/deploy.yml`)
 
-```bash
-# 1. SSH into Contabo VPS as root
-ssh root@<YOUR_CONTABO_VPS_IP>
+### Cloudflare DNS Configuration:
+1. **DNS**: Add A record for `@` and `www` pointing to `95.111.229.139` with **Proxy status: Proxied (Orange Cloud)**.
+2. **SSL/TLS**: Set encryption mode to **Full** (or **Full (Strict)** with Cloudflare Origin CA certificate).
 
-# 2. Clone repository to /opt/moltworld-x402
-git clone https://github.com/UncleTom29/moltworld-x402.git /opt/moltworld-x402
-cd /opt/moltworld-x402
-
-# 3. Run automated provisioner (Node.js 20, pnpm, Nginx, UFW, systemd)
-bash deploy/contabo-setup.sh
-
-# 4. Edit production environment variables
-nano /opt/moltworld-x402/.env
-# Set OPENROUTER_API_KEY, AVM_ADDRESS, and ALGORAND_NETWORK=mainnet
-
-# 5. Restart service
-systemctl restart moltworld
-
-# 6. Verify health
-curl -s http://127.0.0.1:3000/health | jq .
-```
-
-### Cloudflare Configuration:
-1. **DNS**: Add A record for `@` and `www` pointing to your Contabo VPS IP with **Proxy status: Proxied (Orange Cloud)**.
-2. **SSL/TLS**: Set encryption mode to **Full (Strict)**.
-3. **Origin Certificate**: Generate a Cloudflare Origin Certificate and install at `/etc/ssl/certs/moltworld.pem` and `/etc/ssl/private/moltworld.key`.
+### Continuous Deployment via GitHub Actions:
+Any push to `main` triggers [`.github/workflows/deploy.yml`](.github/workflows/deploy.yml):
+1. Runs full test suite (`pnpm test`) and typechecks (`pnpm build`).
+2. Connects to Contabo VPS via SSH using repository secret `CONTABO_SSH_KEY`.
+3. Pulls latest commit to `/opt/moltworld`, installs dependencies, rebuilds, and restarts `moltworld.service`.
+4. Performs automated health verification (`curl -fsS http://127.0.0.1:3402/health`).
 
 ---
 

@@ -1,0 +1,87 @@
+name: Deploy to Contabo VPS
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  test:
+    name: Run Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 9
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Compile TypeScript
+        run: pnpm build
+
+      - name: Run Test Suite
+        env:
+          MOCK_PROVIDERS: "true"
+          ALGORAND_NETWORK: "testnet"
+          AVM_ADDRESS: "XFYEO7VOP3KX2YHZLQBQLM6L565IQJWYZGNG36OF44GYW5FF2FQXURFR7Q"
+          FACILITATOR_URL: "https://facilitator.goplausible.xyz"
+          PUBLIC_DOMAIN: "https://moltworld.xyz"
+        run: pnpm test
+
+  deploy:
+    name: Deploy to Contabo
+    needs: test
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+
+    steps:
+      - name: Trigger Remote Deployment via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.CONTABO_HOST }}
+          username: ${{ secrets.CONTABO_USER }}
+          key: ${{ secrets.CONTABO_SSH_KEY }}
+          port: ${{ secrets.CONTABO_PORT }}
+          script_stop: true
+          script: |
+            set -e
+            echo "======================================================"
+            echo " Moltworld Automated Contabo Deployment Pipeline"
+            echo "======================================================"
+            
+            cd /opt/moltworld
+            
+            echo "Step 1: Fetching latest commit from origin/main..."
+            git fetch origin main
+            git reset --hard origin/main
+            
+            echo "Step 2: Installing production dependencies..."
+            pnpm install --frozen-lockfile
+            
+            echo "Step 3: Compiling TypeScript into dist/..."
+            pnpm build
+            
+            echo "Step 4: Restarting moltworld systemd daemon..."
+            systemctl restart moltworld
+            
+            echo "Step 5: Verifying health check on port 3402..."
+            sleep 3
+            if curl -fsS http://127.0.0.1:3402/health > /dev/null; then
+              echo ">>> SUCCESS: Moltworld is active, healthy, and serving requests on port 3402!"
+            else
+              echo ">>> ERROR: Health check failed. Printing journal logs:"
+              journalctl -u moltworld -n 30 --no-pager
+              exit 1
+            fi
