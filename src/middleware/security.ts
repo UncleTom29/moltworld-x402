@@ -37,17 +37,19 @@ export async function securityHeadersMiddleware(c: Context, next: Next): Promise
 // In-memory sliding window rate limiter for free/unpaid routes
 class RateLimiter {
   private requests: Map<string, number[]> = new Map();
+  private lastCleanup: number = Date.now();
 
   constructor(
     private readonly windowMs: number,
     private readonly maxRequests: number
-  ) {
-    // Clean up old entries periodically
-    setInterval(() => this.cleanup(), windowMs * 2).unref();
-  }
+  ) {}
 
   isRateLimited(ip: string): boolean {
     const now = Date.now();
+    if (now - this.lastCleanup > this.windowMs * 2) {
+      this.cleanup();
+      this.lastCleanup = now;
+    }
     const windowStart = now - this.windowMs;
 
     let timestamps = this.requests.get(ip) || [];

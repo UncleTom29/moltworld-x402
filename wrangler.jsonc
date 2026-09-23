@@ -8,12 +8,17 @@
     {
       "pattern": "moltworld.xyz/*",
       "zone_name": "moltworld.xyz"
+    },
+    {
+      "pattern": "www.moltworld.xyz/*",
+      "zone_name": "moltworld.xyz"
     }
   ],
   "vars": {
-    "ALGORAND_NETWORK": "mainnet",
+    "ALGORAND_NETWORK": "testnet",
     "PUBLIC_DOMAIN": "https://moltworld.xyz",
     "FACILITATOR_URL": "https://facilitator.goplausible.xyz",
+    "AVM_ADDRESS": "XFYEO7VOP3KX2YHZLQBQLM6L565IQJWYZGNG36OF44GYW5FF2FQXURFR7Q",
     "MOCK_PROVIDERS": "false"
   }
 }
