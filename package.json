@@ -13,7 +13,8 @@
     "build": "tsc",
     "start:prod": "node dist/server.js",
     "deploy:contabo": "bash scripts/deploy.sh contabo",
-    "deploy:worker": "bash scripts/deploy.sh worker"
+    "deploy:worker": "bash scripts/deploy.sh worker",
+    "mainnet:wallet": "tsx scripts/manageMainnetMerchant.ts"
   },
   "keywords": [],
   "author": "",
@@ -32,6 +33,7 @@
     "@x402/core": "^2.27.0",
     "@x402/fetch": "^2.27.0",
     "@x402/hono": "^2.27.0",
+    "algosdk": "^3.8.0",
     "dotenv": "^18.0.3",
     "hono": "^4.13.8"
   }

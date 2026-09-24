@@ -4,3 +4,5 @@ dist/
 .env.local
 *.log
 .DS_Store
+*.wallet.json
+.mainnet_merchant_wallet.json

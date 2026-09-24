@@ -15,10 +15,10 @@
     }
   ],
   "vars": {
-    "ALGORAND_NETWORK": "testnet",
+    "ALGORAND_NETWORK": "mainnet",
     "PUBLIC_DOMAIN": "https://moltworld.xyz",
     "FACILITATOR_URL": "https://facilitator.goplausible.xyz",
-    "AVM_ADDRESS": "TQWEL54TCBYH3QJLN2OU2QH7XZTHRDZMF2YQIU5B7W2HK6GS7I2TWHDMXU",
+    "AVM_ADDRESS": "NAPHTASVPDGRYORRYM237OSPA26R2TRRG4XFRRFK7K5H64H6HIIIZZIIXY",
     "MOCK_PROVIDERS": "false"
   }
 }
