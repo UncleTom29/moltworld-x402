@@ -5,4 +5,15 @@ dist/
 *.log
 .DS_Store
 *.wallet.json
+.*wallet*.json
 .mainnet_merchant_wallet.json
+.mainnet_client_wallet.json
+.*fleet*
+.volume_progress.json
+scratch/
+scripts/setupAndSettleMainnet.ts
+scripts/swapAndSettle.ts
+scripts/generateMainnetFleet.ts
+scripts/manageFleetSwaps.ts
+scripts/simulateHighVolumeTraffic.ts
+scripts/processFundedWallets.ts
