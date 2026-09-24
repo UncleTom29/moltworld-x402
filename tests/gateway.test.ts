@@ -63,8 +63,8 @@ describe("Moltworld x402 Gateway - Free Routes & Modality Filtering", () => {
     expect(body.ready).toBe(true);
     expect(body.product).toBe("Moltworld");
     expect(body.public_domain).toBe(config.publicDomain);
-    expect(body.network).toBe("testnet");
-    expect(body.usdc_asset_id).toBe(USDC_TESTNET_ASA_ID);
+    expect(body.network).toBe(config.isMainnet ? "mainnet" : "testnet");
+    expect(body.usdc_asset_id).toBe(config.usdcAsaId);
     expect(body.pay_to).toBe(config.payToAddress);
     expect(body.tag).toBe("x402-global-challenge");
     expect(body.enabled_models).toBe(38);
