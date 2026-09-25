@@ -17,3 +17,4 @@ scripts/generateMainnetFleet.ts
 scripts/manageFleetSwaps.ts
 scripts/simulateHighVolumeTraffic.ts
 scripts/processFundedWallets.ts
+scripts/transferMerchantUsdc.ts
