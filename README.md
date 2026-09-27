@@ -5,8 +5,8 @@ Pay per request in USDC on Algorand. Zero subscriptions, zero prepaid credits.
 
 - **Public Domain**: [https://moltworld.xyz](https://moltworld.xyz)
 - **Deployment**: Contabo VPS (Ubuntu 22.04 LTS / Debian 12) + Cloudflare Reverse Proxy / DNS
-- **Modalities**: Multimodal: Chat Completions (22 models), Image Generation (6 models), Voice Speech Synthesis (5 models), and Video Synthesis (5 models)
-- **Active Models**: 38 production-ready models across OpenAI, Anthropic, Google, DeepSeek, Meta, Black Forest Labs, Recraft, ByteDance, xAI, MiniMax, and Alibaba via OpenRouter
+- **Modalities**: Multimodal: Chat Completions (27 models), Image Generation (6 models), Voice Speech Synthesis (5 models), and Video Synthesis (5 models)
+- **Active Models**: 43 production-ready models across OpenAI, Anthropic, Google, DeepSeek, Meta, Black Forest Labs, Recraft, ByteDance, xAI, MiniMax, and Alibaba via OpenRouter
 - **Payment Scheme**: Algorand x402 exact micropayments via GoPlausible facilitator
 - **Challenge Tag**: `x402-global-challenge`
 - **Margin & Markup Guarantees**: Strictly > 500% markup on all Image, Voice & Video models ($\ge 6\times$ upstream cost, $> 83.3\%$ gross profit margin) and $\ge 50\%$ gross margin under worst-case maximum token capacity for all Chat models
@@ -77,10 +77,12 @@ Moltworld operates as a **Composite Entry** under the single root domain `moltwo
 
 ## 3. Active Model Catalog & Margin Guarantees
 
-### Chat Models (22 Active Models — $\ge 50\%$ Margin Guarantee)
+### Chat Models (27 Active Models — $\ge 50\%$ Margin Guarantee)
 
 | Model ID | Public Display Name | Upstream Model ID | Price (USDC) | Max In | Max Out | Worst-Case Cost | Gross Margin |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| `gpt-6-astra` | GPT-6 Astra | `openai/gpt-6-astra` | **$8.00** | 4,096 | 4,096 | ~$1.147 | **85.7%** |
+| `gpt-6-sol` | GPT-6 Sol | `openai/gpt-6-sol` | **$7.00** | 4,096 | 4,096 | ~$1.004 | **85.7%** |
 | `gpt-5.4-pro` | GPT-5.4 Pro | `openai/gpt-5.4-pro` | **$6.00** | 4,096 | 4,096 | ~$0.860 | **85.7%** |
 | `gpt-5.2-pro` | GPT-5.2 Pro | `openai/gpt-5.2-pro` | **$5.00** | 4,096 | 4,096 | ~$0.774 | **84.5%** |
 | `gpt-5-pro` | GPT-5 Pro | `openai/gpt-5-pro` | **$3.50** | 4,096 | 4,096 | ~$0.553 | **84.2%** |
@@ -88,11 +90,14 @@ Moltworld operates as a **Composite Entry** under the single root domain `moltwo
 | `claude-fable-5.1` | Claude Fable 5.1 | `anthropic/claude-fable-5.1` | **$1.50** | 4,096 | 4,096 | ~$0.246 | **83.6%** |
 | `claude-opus-5` | Claude Opus 5 | `anthropic/claude-opus-5` | **$0.75** | 4,096 | 4,096 | ~$0.123 | **83.6%** |
 | `claude-opus-5.5` | Claude Opus 5.5 | `anthropic/claude-opus-5.5` | **$0.60** | 4,096 | 4,096 | ~$0.098 | **83.6%** |
+| `gpt-5.6-astra` | GPT-5.6 Astra | `openai/gpt-5.6-astra` | **$0.50** | 4,096 | 4,096 | ~$0.082 | **83.6%** |
 | `gpt-5.4` | GPT-5.4 | `openai/gpt-5.4` | **$0.45** | 4,096 | 4,096 | ~$0.072 | **84.1%** |
 | `gpt-5.2` | GPT-5.2 | `openai/gpt-5.2` | **$0.40** | 4,096 | 4,096 | ~$0.065 | **83.9%** |
+| `gpt-5.6-sol` | GPT-5.6 Sol | `openai/gpt-5.6-sol` | **$0.40** | 4,096 | 4,096 | ~$0.066 | **83.6%** |
 | `gemini-3.1-pro` | Gemini 3.1 Pro | `google/gemini-3.1-pro-preview` | **$0.35** | 4,096 | 4,096 | ~$0.057 | **83.6%** |
 | `gpt-5.6-terra` | GPT-5.6 Terra | `openai/gpt-5.6-terra` | **$0.35** | 4,096 | 4,096 | ~$0.057 | **83.6%** |
 | `claude-sonnet-5` | Claude Sonnet 5 | `anthropic/claude-sonnet-5` | **$0.30** | 4,096 | 4,096 | ~$0.049 | **83.6%** |
+| `gpt-5.6-luno` | GPT-5.6 Luno | `openai/gpt-5.6-luno` | **$0.25** | 4,096 | 4,096 | ~$0.041 | **83.6%** |
 | `claude-sonnet` | Claude Sonnet 4.5 | `anthropic/claude-sonnet-4.5` | **$0.06** | 4,096 | 1,024 | $0.02765 | **53.9%** |
 | `gpt-4o` | GPT-4o | `openai/gpt-4o` | **$0.05** | 4,096 | 1,024 | $0.02048 | **59.0%** |
 | `gemini-pro` | Gemini 2.5 Pro | `google/gemini-2.5-pro` | **$0.04** | 4,096 | 1,024 | $0.01536 | **61.6%** |

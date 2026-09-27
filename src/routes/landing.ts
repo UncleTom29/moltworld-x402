@@ -322,7 +322,7 @@ export function renderLandingPage(c: Context): Response {
 
     <section class="hero">
       <h1>One API for AI models and agents.</h1>
-      <p>Access GPT-5.4 Pro, Claude Opus 5.5, Sora 2 Pro, Flux 2 Pro, Hailuo H3, and 35+ frontier models across Chat, Image, Voice & Video. Pay per request in USDC on Algorand. Zero subscriptions.</p>
+      <p>Access GPT-6 Astra, GPT-5.4 Pro, Claude Opus 5.5, Sora 2 Pro, Hailuo H3, and 40+ frontier models across Chat, Image, Voice & Video. Pay per request in USDC on Algorand. Zero subscriptions.</p>
       <div class="network-pill">
         Settlement: <strong>Algorand USDC</strong> (ASA: ${usdcAsa}) via GoPlausible Facilitator
       </div>

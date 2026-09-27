@@ -54,7 +54,7 @@ describe("Moltworld x402 Gateway - Free Routes & Modality Filtering", () => {
     expect(favIcoBuf.byteLength).toBeGreaterThan(1000);
   });
 
-  it("GET /health returns 200 OK with 38 enabled models and zero exposed secrets", async () => {
+  it("GET /health returns 200 OK with 43 enabled models and zero exposed secrets", async () => {
     const res = await app.fetch(new Request("http://localhost/health"));
     expect(res.status).toBe(200);
 
@@ -67,8 +67,8 @@ describe("Moltworld x402 Gateway - Free Routes & Modality Filtering", () => {
     expect(body.usdc_asset_id).toBe(config.usdcAsaId);
     expect(body.pay_to).toBe(config.payToAddress);
     expect(body.tag).toBe("x402-global-challenge");
-    expect(body.enabled_models).toBe(38);
-    expect(body.models_by_modality.chat).toBe(22);
+    expect(body.enabled_models).toBe(43);
+    expect(body.models_by_modality.chat).toBe(27);
     expect(body.models_by_modality.image).toBe(6);
     expect(body.models_by_modality.voice).toBe(5);
     expect(body.models_by_modality.video).toBe(5);
@@ -95,14 +95,14 @@ describe("Moltworld x402 Gateway - Free Routes & Modality Filtering", () => {
     setGatewayReady(true);
   });
 
-  it("GET /v1/models returns 200 OK with all 38 enabled models across Chat, Image, Voice & Video", async () => {
+  it("GET /v1/models returns 200 OK with all 43 enabled models across Chat, Image, Voice & Video", async () => {
     const res = await app.fetch(new Request("http://localhost/v1/models"));
     expect(res.status).toBe(200);
 
     const body = (await res.json()) as any;
     expect(body.object).toBe("list");
     expect(Array.isArray(body.data)).toBe(true);
-    expect(body.data.length).toBe(38);
+    expect(body.data.length).toBe(43);
 
     const slugs = body.data.map((m: any) => m.id);
     // Chat models
@@ -116,6 +116,8 @@ describe("Moltworld x402 Gateway - Free Routes & Modality Filtering", () => {
     expect(slugs).toContain("deepseek");
     expect(slugs).toContain("deepseek-r1");
     expect(slugs).toContain("llama");
+    expect(slugs).toContain("gpt-6-astra");
+    expect(slugs).toContain("gpt-6-sol");
     expect(slugs).toContain("gpt-5.4-pro");
     expect(slugs).toContain("gpt-5.2-pro");
     expect(slugs).toContain("gpt-5-pro");
@@ -123,11 +125,14 @@ describe("Moltworld x402 Gateway - Free Routes & Modality Filtering", () => {
     expect(slugs).toContain("claude-fable-5.1");
     expect(slugs).toContain("claude-opus-5");
     expect(slugs).toContain("claude-opus-5.5");
+    expect(slugs).toContain("gpt-5.6-astra");
     expect(slugs).toContain("gpt-5.4");
     expect(slugs).toContain("gpt-5.2");
+    expect(slugs).toContain("gpt-5.6-sol");
     expect(slugs).toContain("gemini-3.1-pro");
     expect(slugs).toContain("gpt-5.6-terra");
     expect(slugs).toContain("claude-sonnet-5");
+    expect(slugs).toContain("gpt-5.6-luno");
 
     // Image models
     expect(slugs).toContain("recraft-v4.1-flash");
@@ -176,6 +181,8 @@ describe("Moltworld x402 Gateway - Free Routes & Modality Filtering", () => {
       deepseek: { prompt: 0.32, completion: 0.89 },
       "deepseek-r1": { prompt: 0.70, completion: 2.50 },
       llama: { prompt: 0.10, completion: 0.32 },
+      "gpt-6-astra": { prompt: 40.00, completion: 240.00 },
+      "gpt-6-sol": { prompt: 35.00, completion: 210.00 },
       "gpt-5.4-pro": { prompt: 30.00, completion: 180.00 },
       "gpt-5.2-pro": { prompt: 21.00, completion: 168.00 },
       "gpt-5-pro": { prompt: 15.00, completion: 120.00 },
@@ -183,11 +190,14 @@ describe("Moltworld x402 Gateway - Free Routes & Modality Filtering", () => {
       "claude-fable-5.1": { prompt: 10.00, completion: 50.00 },
       "claude-opus-5": { prompt: 5.00, completion: 25.00 },
       "claude-opus-5.5": { prompt: 4.00, completion: 20.00 },
+      "gpt-5.6-astra": { prompt: 3.00, completion: 17.00 },
       "gpt-5.4": { prompt: 2.50, completion: 15.00 },
       "gpt-5.2": { prompt: 1.75, completion: 14.00 },
+      "gpt-5.6-sol": { prompt: 2.40, completion: 13.60 },
       "gemini-3.1-pro": { prompt: 2.00, completion: 12.00 },
       "gpt-5.6-terra": { prompt: 2.00, completion: 12.00 },
       "claude-sonnet-5": { prompt: 2.00, completion: 10.00 },
+      "gpt-5.6-luno": { prompt: 1.50, completion: 8.50 },
     };
 
     // Worst-case upstream generation costs for multimodal models
@@ -214,7 +224,7 @@ describe("Moltworld x402 Gateway - Free Routes & Modality Filtering", () => {
     };
 
     const models = defaultModelRegistry.getEnabledModels();
-    expect(models.length).toBe(38);
+    expect(models.length).toBe(43);
 
     for (const model of models) {
       const priceUsd = parseFloat(model.price.replace("$", ""));
