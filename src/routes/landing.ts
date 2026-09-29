@@ -388,7 +388,7 @@ export function renderLandingPage(c: Context): Response {
 <span class="hl-keyword">const</span> client = <span class="hl-keyword">new</span> x402Client().register(<span class="hl-string">"algorand:*"</span>, <span class="hl-keyword">new</span> ExactAvmScheme(signer));
 <span class="hl-keyword">const</span> fetchWithPay = wrapFetchWithPayment(globalThis.fetch, client);
 
-<span class="hl-comment">// 2. Chat: Claude Sonnet 4.5 ($0.06 USDC)</span>
+<span class="hl-comment">// 2. Chat: Claude Sonnet 4.5 ($0.006 USDC)</span>
 <span class="hl-keyword">const</span> chatRes = <span class="hl-keyword">await</span> fetchWithPay(<span class="hl-string">"${config.publicDomain}/v1/models/claude-sonnet/chat/completions"</span>, {
   method: <span class="hl-string">"POST"</span>,
   headers: { <span class="hl-string">"Content-Type"</span>: <span class="hl-string">"application/json"</span> },
@@ -409,7 +409,7 @@ export function renderLandingPage(c: Context): Response {
   body: JSON.stringify({ input: <span class="hl-string">"Payment settled on Algorand. Commencing audio stream."</span>, voice: <span class="hl-string">"alloy"</span> })
 });
 
-<span class="hl-comment">// 5. Video: Sora 2 Pro ($10.00 USDC)</span>
+<span class="hl-comment">// 5. Video: Sora 2 Pro ($1.00 USDC)</span>
 <span class="hl-keyword">const</span> videoRes = <span class="hl-keyword">await</span> fetchWithPay(<span class="hl-string">"${config.publicDomain}/v1/models/sora-2-pro/videos/generations"</span>, {
   method: <span class="hl-string">"POST"</span>,
   headers: { <span class="hl-string">"Content-Type"</span>: <span class="hl-string">"application/json"</span> },

@@ -5,11 +5,10 @@ Pay per request in USDC on Algorand. Zero subscriptions, zero prepaid credits.
 
 - **Public Domain**: [https://moltworld.xyz](https://moltworld.xyz)
 - **Deployment**: Contabo VPS (Ubuntu 22.04 LTS / Debian 12) + Cloudflare Reverse Proxy / DNS
-- **Modalities**: Multimodal: Chat Completions (27 models), Image Generation (6 models), Voice Speech Synthesis (5 models), and Video Synthesis (5 models)
-- **Active Models**: 43 production-ready models across OpenAI, Anthropic, Google, DeepSeek, Meta, Black Forest Labs, Recraft, ByteDance, xAI, MiniMax, and Alibaba via OpenRouter
+- **Modalities**: Multimodal: Chat Completions (28 models), Image Generation (6 models), Voice Speech Synthesis (5 models), and Video Synthesis (5 models)
+- **Active Models**: 44 production-ready models across OpenAI, Anthropic, Google, DeepSeek, Meta, Black Forest Labs, Recraft, ByteDance, xAI, MiniMax, and Alibaba via OpenRouter
 - **Payment Scheme**: Algorand x402 exact micropayments via GoPlausible facilitator
 - **Challenge Tag**: `x402-global-challenge`
-- **Margin & Markup Guarantees**: Strictly > 500% markup on all Image, Voice & Video models ($\ge 6\times$ upstream cost, $> 83.3\%$ gross profit margin) and $\ge 50\%$ gross margin under worst-case maximum token capacity for all Chat models
 
 ---
 
@@ -22,9 +21,7 @@ Every paid endpoint is:
 2. **Cataloged in GoPlausible Bazaar**: Discovered automatically by agents via Bazaar discovery extensions.
 3. **Attributed to the Global x402 Challenge**: Tagged with `x402-global-challenge` on every route.
 4. **Settled under a unified address**: Volume aggregates under one merchant account under `moltworld.xyz`.
-5. **Strict > 500% Markup on Multimodal Models**: Every Image, Voice, and Video model is priced with $> 500\%$ markup over upstream generation costs (yielding $> 83.3\%$ profit margin).
-6. **Guaranteed Margin on Chat**: Fixed chat prices guarantee $\ge 50\%$ gross profit margin under worst-case 100% token usage.
-7. **Fail-Closed Architecture**: Unsupported providers and endpoints without working upstream keys are disabled, never advertised, and never accept payment. If facilitator initialization fails, the gateway immediately fails closed (503 Service Unavailable).
+5. **Fail-Closed Architecture**: Unsupported providers and endpoints without working upstream keys are disabled, never advertised, and never accept payment. If facilitator initialization fails, the gateway immediately fails closed (503 Service Unavailable).
 
 ---
 
@@ -75,62 +72,61 @@ Moltworld operates as a **Composite Entry** under the single root domain `moltwo
 
 ---
 
-## 3. Active Model Catalog & Margin Guarantees
+## 3. Active Model Catalog
 
-### Chat Models (27 Active Models — $\ge 50\%$ Margin Guarantee)
+### Chat Models (28 Active Models)
 
-| Model ID | Public Display Name | Upstream Model ID | Price (USDC) | Max In | Max Out | Worst-Case Cost | Gross Margin |
-| :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| `gpt-6-astra` | GPT-6 Astra | `openai/gpt-6-astra` | **$8.00** | 4,096 | 4,096 | ~$1.147 | **85.7%** |
-| `gpt-6-sol` | GPT-6 Sol | `openai/gpt-6-sol` | **$7.00** | 4,096 | 4,096 | ~$1.004 | **85.7%** |
-| `gpt-5.4-pro` | GPT-5.4 Pro | `openai/gpt-5.4-pro` | **$6.00** | 4,096 | 4,096 | ~$0.860 | **85.7%** |
-| `gpt-5.2-pro` | GPT-5.2 Pro | `openai/gpt-5.2-pro` | **$5.00** | 4,096 | 4,096 | ~$0.774 | **84.5%** |
-| `gpt-5-pro` | GPT-5 Pro | `openai/gpt-5-pro` | **$3.50** | 4,096 | 4,096 | ~$0.553 | **84.2%** |
-| `o3-pro` | o3 Pro | `openai/o3-pro` | **$2.50** | 4,096 | 4,096 | ~$0.410 | **83.6%** |
-| `claude-fable-5.1` | Claude Fable 5.1 | `anthropic/claude-fable-5.1` | **$1.50** | 4,096 | 4,096 | ~$0.246 | **83.6%** |
-| `claude-opus-5` | Claude Opus 5 | `anthropic/claude-opus-5` | **$0.75** | 4,096 | 4,096 | ~$0.123 | **83.6%** |
-| `claude-opus-5.5` | Claude Opus 5.5 | `anthropic/claude-opus-5.5` | **$0.60** | 4,096 | 4,096 | ~$0.098 | **83.6%** |
-| `gpt-5.6-astra` | GPT-5.6 Astra | `openai/gpt-5.6-astra` | **$0.50** | 4,096 | 4,096 | ~$0.082 | **83.6%** |
-| `gpt-5.4` | GPT-5.4 | `openai/gpt-5.4` | **$0.45** | 4,096 | 4,096 | ~$0.072 | **84.1%** |
-| `gpt-5.2` | GPT-5.2 | `openai/gpt-5.2` | **$0.40** | 4,096 | 4,096 | ~$0.065 | **83.9%** |
-| `gpt-5.6-sol` | GPT-5.6 Sol | `openai/gpt-5.6-sol` | **$0.40** | 4,096 | 4,096 | ~$0.066 | **83.6%** |
-| `gemini-3.1-pro` | Gemini 3.1 Pro | `google/gemini-3.1-pro-preview` | **$0.35** | 4,096 | 4,096 | ~$0.057 | **83.6%** |
-| `gpt-5.6-terra` | GPT-5.6 Terra | `openai/gpt-5.6-terra` | **$0.35** | 4,096 | 4,096 | ~$0.057 | **83.6%** |
-| `claude-sonnet-5` | Claude Sonnet 5 | `anthropic/claude-sonnet-5` | **$0.30** | 4,096 | 4,096 | ~$0.049 | **83.6%** |
-| `gpt-5.6-luno` | GPT-5.6 Luno | `openai/gpt-5.6-luno` | **$0.25** | 4,096 | 4,096 | ~$0.041 | **83.6%** |
-| `claude-sonnet` | Claude Sonnet 4.5 | `anthropic/claude-sonnet-4.5` | **$0.06** | 4,096 | 1,024 | $0.02765 | **53.9%** |
-| `gpt-4o` | GPT-4o | `openai/gpt-4o` | **$0.05** | 4,096 | 1,024 | $0.02048 | **59.0%** |
-| `gemini-pro` | Gemini 2.5 Pro | `google/gemini-2.5-pro` | **$0.04** | 4,096 | 1,024 | $0.01536 | **61.6%** |
-| `gpt` | GPT-4o Mini | `openai/gpt-4o-mini` | **$0.03** | 4,096 | 2,048 | $0.00184 | **93.9%** |
-| `claude` | Claude 3 Haiku | `anthropic/claude-3-haiku` | **$0.03** | 4,096 | 2,048 | $0.00358 | **88.1%** |
-| `gemini` | Gemini 2.5 Flash | `google/gemini-2.5-flash` | **$0.02** | 4,096 | 2,048 | $0.00635 | **68.3%** |
-| `deepseek-r1` | DeepSeek R1 | `deepseek/deepseek-r1` | **$0.02** | 4,096 | 2,048 | $0.00799 | **60.1%** |
-| `gemini-lite` | Gemini 2.5 Flash Lite | `google/gemini-2.5-flash-lite` | **$0.01** | 4,096 | 2,048 | $0.00123 | **87.7%** |
-| `deepseek` | DeepSeek V3 | `deepseek/deepseek-chat` | **$0.01** | 4,096 | 2,048 | $0.00313 | **68.7%** |
-| `llama` | Llama 3.3 70B | `meta-llama/llama-3.3-70b-instruct` | **$0.01** | 4,096 | 2,048 | $0.00107 | **89.3%** |
+| Model ID | Public Display Name | Upstream Model ID | Price (USDC) | Max In | Max Out |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| `gpt-6-astra` | GPT-6 Astra | `openai/gpt-6-astra` | **$0.80** | 4,096 | 4,096 |
+| `gpt-6-sol` | GPT-6 Sol | `openai/gpt-6-sol` | **$0.70** | 4,096 | 4,096 |
+| `gpt-5.4-pro` | GPT-5.4 Pro | `openai/gpt-5.4-pro` | **$0.60** | 4,096 | 4,096 |
+| `gpt-5.2-pro` | GPT-5.2 Pro | `openai/gpt-5.2-pro` | **$0.50** | 4,096 | 4,096 |
+| `gpt-5-pro` | GPT-5 Pro | `openai/gpt-5-pro` | **$0.35** | 4,096 | 4,096 |
+| `o3-pro` | o3 Pro | `openai/o3-pro` | **$0.25** | 4,096 | 4,096 |
+| `claude-fable-5.1` | Claude Fable 5.1 | `anthropic/claude-fable-5.1` | **$0.15** | 4,096 | 4,096 |
+| `claude-opus-5.5` | Claude Opus 5.5 | `anthropic/claude-opus-5.5` | **$0.060** | 4,096 | 4,096 |
+| `claude-opus-5` | Claude Opus 5 | `anthropic/claude-opus-5` | **$0.055** | 4,096 | 4,096 |
+| `gpt-5.6-astra` | GPT-5.6 Astra | `openai/gpt-5.6-astra` | **$0.050** | 4,096 | 4,096 |
+| `gpt-5.6-sol` | GPT-5.6 Sol | `openai/gpt-5.6-sol` | **$0.040** | 4,096 | 4,096 |
+| `claude-sonnet-5.5` | Claude Sonnet 5.5 | `anthropic/claude-sonnet-5.5` | **$0.040** | 4,096 | 4,096 |
+| `gemini-3.1-pro` | Gemini 3.1 Pro | `google/gemini-3.1-pro-preview` | **$0.035** | 4,096 | 4,096 |
+| `gpt-5.6-terra` | GPT-5.6 Terra | `openai/gpt-5.6-terra` | **$0.035** | 4,096 | 4,096 |
+| `claude-sonnet-5` | Claude Sonnet 5 | `anthropic/claude-sonnet-5` | **$0.030** | 4,096 | 4,096 |
+| `gpt-5.6-luno` | GPT-5.6 Luno | `openai/gpt-5.6-luno` | **$0.025** | 4,096 | 4,096 |
+| `gpt-5.4` | GPT-5.4 | `openai/gpt-5.4` | **$0.022** | 4,096 | 4,096 |
+| `gpt-5.2` | GPT-5.2 | `openai/gpt-5.2` | **$0.020** | 4,096 | 4,096 |
+| `claude-sonnet` | Claude Sonnet 4.5 | `anthropic/claude-sonnet-4.5` | **$0.006** | 4,096 | 1,024 |
+| `gpt-4o` | GPT-4o | `openai/gpt-4o` | **$0.005** | 4,096 | 1,024 |
+| `gemini-pro` | Gemini 2.5 Pro | `google/gemini-2.5-pro` | **$0.004** | 4,096 | 1,024 |
+| `gpt` | GPT-4o Mini | `openai/gpt-4o-mini` | **$0.003** | 4,096 | 2,048 |
+| `claude` | Claude 3 Haiku | `anthropic/claude-3-haiku` | **$0.003** | 4,096 | 2,048 |
+| `gemini` | Gemini 2.5 Flash | `google/gemini-2.5-flash` | **$0.002** | 4,096 | 2,048 |
+| `deepseek-r1` | DeepSeek R1 | `deepseek/deepseek-r1` | **$0.002** | 4,096 | 2,048 |
+| `gemini-lite` | Gemini 2.5 Flash Lite | `google/gemini-2.5-flash-lite` | **$0.001** | 4,096 | 2,048 |
+| `deepseek` | DeepSeek V3 | `deepseek/deepseek-chat` | **$0.001** | 4,096 | 2,048 |
+| `llama` | Llama 3.3 70B | `meta-llama/llama-3.3-70b-instruct` | **$0.001** | 4,096 | 2,048 |
 
-### Multimodal Models (16 Active Models — Strictly > 500% Markup)
+### Multimodal Models (16 Active Models)
 
-$$\text{Markup } \% = \frac{\text{Moltworld Price} - \text{Worst-Case Upstream Cost}}{\text{Worst-Case Upstream Cost}} \times 100\% \quad (\ge 500\% \iff \text{Price} \ge 6\times \text{Cost})$$
-
-| Modality | Model ID | Public Display Name | Upstream Model ID | Upstream Cost | Moltworld Price | Markup % | Gross Margin |
-| :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| **Image** | `recraft-v4.1-flash` | Recraft V4.1 Flash | `recraft/recraft-v4.1-flash` | $0.007 / img | **$0.05** | **+614%** | 86.0% |
-| **Image** | `flux-2-pro` | FLUX.2 Pro | `black-forest-labs/flux.2-pro` | $0.030 / img | **$0.20** | **+567%** | 85.0% |
-| **Image** | `qwen-image-3` | Qwen Image 3 | `qwen/qwen-image-3` | $0.030 / img | **$0.20** | **+567%** | 85.0% |
-| **Image** | `seedream-5.0` | ByteDance Seedream 5.0 | `bytedance-seed/seedream-5-0-lite` | $0.035 / img | **$0.25** | **+614%** | 86.0% |
-| **Image** | `grok-imagine-image` | Grok Imagine Image 2.0 | `x-ai/grok-imagine-image-2.0` | $0.040 / img | **$0.25** | **+525%** | 84.0% |
-| **Image** | `recraft-v3` | Recraft V3 | `recraft/recraft-v3` | $0.040 / img | **$0.25** | **+525%** | 84.0% |
-| **Voice** | `gpt-audio-mini` | GPT Audio Mini | `openai/gpt-audio-mini` | $0.002 / req | **$0.02** | **+900%** | 90.0% |
-| **Voice** | `tts-1` | OpenAI TTS-1 | `tts-1` | $0.015 / req | **$0.10** | **+567%** | 85.0% |
-| **Voice** | `tts-1-hd` | OpenAI TTS-1 HD | `tts-1-hd` | $0.030 / req | **$0.20** | **+567%** | 85.0% |
-| **Voice** | `gpt-audio` | GPT Audio | `openai/gpt-audio` | $0.033 / req | **$0.20** | **+506%** | 83.5% |
-| **Voice** | `eleven-multilingual` | ElevenLabs Multilingual V2 | `eleven_multilingual_v2` | $0.030 / req | **$0.20** | **+567%** | 85.0% |
-| **Video** | `veo-3.1-fast` | Google Veo 3.1 Fast | `google/veo-3.1-fast` | $0.40 / 5s | **$2.50** | **+525%** | 84.0% |
-| **Video** | `kling-v3.0-std` | Kling Video V3.0 | `kwaivgi/kling-v3.0-std` | $0.42 / 5s | **$2.75** | **+555%** | 84.7% |
-| **Video** | `wan-3.0` | Alibaba Wan 3.0 | `alibaba/wan-3.0` | $0.50 / 5s | **$3.00** | **+500%** | 83.3% |
-| **Video** | `hailuo-3` | MiniMax Hailuo H3 | `minimax/hailuo-3` | $0.65 / 5s | **$4.00** | **+515%** | 83.8% |
-| **Video** | `sora-2-pro` | OpenAI Sora 2 Pro | `openai/sora-2-pro` | $1.50 / 5s | **$10.00** | **+567%** | 85.0% |
+| Modality | Model ID | Public Display Name | Upstream Model ID | Price (USDC) |
+| :--- | :--- | :--- | :--- | :--- |
+| **Image** | `recraft-v4.1-flash` | Recraft V4.1 Flash | `recraft/recraft-v4.1-flash` | **$0.05** |
+| **Image** | `flux-2-pro` | FLUX.2 Pro | `black-forest-labs/flux.2-pro` | **$0.20** |
+| **Image** | `qwen-image-3` | Qwen Image 3 | `qwen/qwen-image-3` | **$0.20** |
+| **Image** | `seedream-5.0` | ByteDance Seedream 5.0 | `bytedance-seed/seedream-5-0-lite` | **$0.25** |
+| **Image** | `grok-imagine-image` | Grok Imagine Image 2.0 | `x-ai/grok-imagine-image-2.0` | **$0.25** |
+| **Image** | `recraft-v3` | Recraft V3 | `recraft/recraft-v3` | **$0.25** |
+| **Voice** | `gpt-audio-mini` | GPT Audio Mini | `openai/gpt-audio-mini` | **$0.02** |
+| **Voice** | `tts-1` | OpenAI TTS-1 | `tts-1` | **$0.10** |
+| **Voice** | `tts-1-hd` | OpenAI TTS-1 HD | `tts-1-hd` | **$0.20** |
+| **Voice** | `gpt-audio` | GPT Audio | `openai/gpt-audio` | **$0.20** |
+| **Voice** | `eleven-multilingual` | ElevenLabs Multilingual V2 | `eleven_multilingual_v2` | **$0.20** |
+| **Video** | `veo-3.1-fast` | Google Veo 3.1 Fast | `google/veo-3.1-fast` | **$0.25** |
+| **Video** | `kling-v3.0-std` | Kling Video V3.0 | `kwaivgi/kling-v3.0-std` | **$0.275** |
+| **Video** | `wan-3.0` | Alibaba Wan 3.0 | `alibaba/wan-3.0` | **$0.30** |
+| **Video** | `hailuo-3` | MiniMax Hailuo H3 | `minimax/hailuo-3` | **$0.40** |
+| **Video** | `sora-2-pro` | OpenAI Sora 2 Pro | `openai/sora-2-pro` | **$1.00** |
 
 ---
 
@@ -167,7 +163,7 @@ pnpm install
 # Build TypeScript
 pnpm build
 
-# Run automated tests (19 tests covering profit margins, fail-closed guards, 402 headers)
+# Run automated tests (22 tests covering catalog integrity, fail-closed guards, 402 headers)
 pnpm test
 
 # Run local development server
@@ -246,13 +242,13 @@ Querying GoPlausible's discovery endpoint (`https://facilitator.goplausible.xyz/
 ## 7. Running the Test Client
 
 ```bash
-# Test with Gemini 2.5 Flash Lite ($0.01 USDC)
+# Test with Gemini 2.5 Flash Lite ($0.001 USDC)
 AVM_CLIENT_PRIVATE_KEY=<YOUR_PRIVATE_KEY> pnpm test:client --url=https://moltworld.xyz --model=gemini-lite
 
-# Test with DeepSeek V3 ($0.01 USDC)
+# Test with DeepSeek V3 ($0.001 USDC)
 AVM_CLIENT_PRIVATE_KEY=<YOUR_PRIVATE_KEY> pnpm test:client --url=https://moltworld.xyz --model=deepseek
 
-# Test with GPT-4o ($0.06 USDC)
+# Test with GPT-4o ($0.005 USDC)
 AVM_CLIENT_PRIVATE_KEY=<YOUR_PRIVATE_KEY> pnpm test:client --url=https://moltworld.xyz --model=gpt-4o
 ```
 
@@ -269,7 +265,7 @@ When ready to switch from Testnet to Algorand Mainnet:
 3. **Deploy**:
    * **Contabo VPS**: Push to `main` (GitHub Actions automatically tests, builds, and deploys to VPS) or run `pnpm deploy:contabo`.
    * **Cloudflare Worker**: Run `pnpm deploy:worker`.
-4. **Smoke Test**: Execute a single $0.01 USDC test on Mainnet using `gemini-lite`:
+4. **Smoke Test**: Execute a single $0.001 USDC test on Mainnet using `gemini-lite`:
    ```bash
    ALGORAND_NETWORK=mainnet AVM_CLIENT_PRIVATE_KEY=<YOUR_MAINNET_KEY> pnpm test:client --url=https://moltworld.xyz --model=gemini-lite
    ```
@@ -278,9 +274,8 @@ When ready to switch from Testnet to Algorand Mainnet:
 
 ## 9. CI/CD & Production Architecture
 
-- **GitHub Actions**: Automated CI runs on every push and pull request to `main` via [`.github/workflows/deploy.yml`](.github/workflows/deploy.yml), compiling TypeScript, running all 19 tests, and deploying to Contabo VPS.
+- **GitHub Actions**: Automated CI runs on every push and pull request to `main` via [`.github/workflows/deploy.yml`](.github/workflows/deploy.yml), compiling TypeScript, running all 22 tests, deploying to the Contabo VPS and the Cloudflare Worker that serves `moltworld.xyz`, then verifying the public endpoint serves the current catalog.
 - **Fail-Closed Design**: If upstream provider keys or facilitator services are unavailable, the gateway fails closed (`503 Service Unavailable`) before payment can ever be accepted.
-- **Strict Margins**: Fixed model prices guarantee $\ge 50\%$ gross profit margin over OpenRouter upstream token costs.
 
 ---
 
