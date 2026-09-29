@@ -130,31 +130,7 @@ Moltworld operates as a **Composite Entry** under the single root domain `moltwo
 
 ---
 
-## 4. Deploying to Contabo VPS (with Cloudflare DNS)
-
-Moltworld runs natively under **Node.js 22** as a systemd service (`moltworld.service`) listening on conflict-free port **`3402`**, coexisting cleanly alongside other projects on the VPS.
-
-### Live Server Architecture on Contabo VPS (`95.111.229.139`):
-- **App Path**: `/opt/moltworld`
-- **Port**: `3402` (bound to `127.0.0.1:3402`, no external exposure)
-- **Nginx Config**: `/etc/nginx/sites-available/moltworld.conf` (proxies `moltworld.xyz` to `127.0.0.1:3402` with HTTP/2, SSL, and `proxy_buffering off`)
-- **Systemd Daemon**: `systemctl status moltworld`
-- **Continuous Deployment**: Automated on push to `main` via GitHub Actions (`.github/workflows/deploy.yml`)
-
-### Cloudflare DNS Configuration:
-1. **DNS**: Add A record for `@` and `www` pointing to `95.111.229.139` with **Proxy status: Proxied (Orange Cloud)**.
-2. **SSL/TLS**: Set encryption mode to **Full** (or **Full (Strict)** with Cloudflare Origin CA certificate).
-
-### Continuous Deployment via GitHub Actions:
-Any push to `main` triggers [`.github/workflows/deploy.yml`](.github/workflows/deploy.yml):
-1. Runs full test suite (`pnpm test`) and typechecks (`pnpm build`).
-2. Connects to Contabo VPS via SSH using repository secret `CONTABO_SSH_KEY`.
-3. Pulls latest commit to `/opt/moltworld`, installs dependencies, rebuilds, and restarts `moltworld.service`.
-4. Performs automated health verification (`curl -fsS http://127.0.0.1:3402/health`).
-
----
-
-## 5. Local Development & Testing
+## 4. Local Development & Testing
 
 ```bash
 # Install dependencies
@@ -174,7 +150,7 @@ pnpm dev
 
 ---
 
-## 6. Validated End-to-End Testnet Settlement Proof
+## 5. Validated End-to-End Testnet Settlement Proof
 
 Moltworld's complete machine-to-machine x402 payment and AI inference pipeline is live, verified, and settled on **Algorand Testnet** through the official **GoPlausible x402 Facilitator**:
 
@@ -239,7 +215,7 @@ Querying GoPlausible's discovery endpoint (`https://facilitator.goplausible.xyz/
 
 ---
 
-## 7. Running the Test Client
+## 6. Running the Test Client
 
 ```bash
 # Test with Gemini 2.5 Flash Lite ($0.001 USDC)
@@ -254,7 +230,7 @@ AVM_CLIENT_PRIVATE_KEY=<YOUR_PRIVATE_KEY> pnpm test:client --url=https://moltwor
 
 ---
 
-## 8. Mainnet Deployment Checklist
+## 7. Mainnet Deployment Checklist
 
 When ready to switch from Testnet to Algorand Mainnet:
 
