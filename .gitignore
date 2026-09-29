@@ -19,3 +19,4 @@ scripts/simulateHighVolumeTraffic.ts
 scripts/processFundedWallets.ts
 scripts/transferMerchantUsdc.ts
 scripts/swapAndWithdrawMerchantAlgo.ts
+scripts/withdrawMerchantUsdc.ts

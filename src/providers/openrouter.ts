@@ -10,11 +10,19 @@ import {
   VideoGenerationResponse,
 } from "./types.js";
 
-// Priority free models router on OpenRouter (OpenRouter allows max 3 models in fallback array)
+// Priority free models router on OpenRouter (OpenRouter allows max 3 models in fallback array).
+// Every entry must be genuinely free. A paid model anywhere in this array — such
+// as "openrouter/auto" — makes OpenRouter apply a credit check to the whole
+// request, so it returns 402 "requires more credits" without ever trying the
+// free candidates, which the gateway then surfaces as a 502 on every chat call.
+// General-purpose models lead the chain. "openrouter/free" is a router that can
+// land on a special-purpose model — a content-safety classifier that answers
+// "User Safety: safe", or one that returns empty content — so it sits last as a
+// fallback rather than first.
 const OPENROUTER_FREE_MODELS = [
-  process.env.OPENROUTER_FREE_MODEL || "openrouter/free",
-  "google/gemma-4-26b-a4b-it:free",
-  "openrouter/auto",
+  process.env.OPENROUTER_FREE_MODEL || "nvidia/nemotron-3-super-120b-a12b:free",
+  "nvidia/nemotron-3-ultra-550b-a55b:free",
+  "openrouter/free",
 ];
 
 function generateWavBase64(durationSeconds: number, text: string): string {
@@ -50,6 +58,48 @@ function generateWavBase64(durationSeconds: number, text: string): string {
   }
 
   return buffer.toString("base64");
+}
+
+// Secondary pool tried when the primary chain is rate-limited or refuses the
+// request. Kept distinct so one provider having a bad minute is recoverable.
+const OPENROUTER_FALLBACK_MODELS = [
+  "google/gemma-4-31b-it:free",
+  "qwen/qwen3.8-27b:free",
+  "openrouter/free",
+];
+
+function buildChatFallbackResponse(
+  modelSlug: string,
+  request: ChatCompletionRequest,
+  cause?: Error
+): ChatCompletionResponse {
+  const reason = cause?.message || "upstream inference capacity was unavailable";
+  const promptChars = request.messages.reduce((n, m) => n + m.content.length, 0);
+
+  return {
+    id: `chatcmpl-moltworld-degraded-${Date.now()}`,
+    object: "chat.completion",
+    created: Math.floor(Date.now() / 1000),
+    model: modelSlug,
+    choices: [
+      {
+        index: 0,
+        message: {
+          role: "assistant",
+          content:
+            `[moltworld: degraded response] No model output was generated for this request — ${reason}. ` +
+            `This is not a model completion and should not be treated as one. ` +
+            `Retry shortly; upstream free-tier capacity resets on a daily cycle.`,
+        },
+        finish_reason: "stop",
+      },
+    ],
+    usage: {
+      prompt_tokens: Math.ceil(promptChars / 4),
+      completion_tokens: 0,
+      total_tokens: Math.ceil(promptChars / 4),
+    },
+  };
 }
 
 function createFallbackSvg(prompt: string, modelSlug: string): string {
@@ -135,50 +185,85 @@ export class OpenRouterProvider implements AIProvider {
     request: ChatCompletionRequest,
     modelSlug: string
   ): Promise<ChatCompletionResponse> {
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), this.timeoutMs);
+    const want = request.max_tokens ?? 1024;
+    const deadline = Date.now() + this.timeoutMs;
 
-    try {
-      // Route underneath via OpenRouter free model router
-      const data = await this.callOpenRouterFree(
-        {
-          models: OPENROUTER_FREE_MODELS,
-          messages: request.messages,
-          temperature: request.temperature ?? 0.7,
-          max_tokens: request.max_tokens ?? 1024,
-        },
-        controller.signal
+    // Escalating ladder: a different free pool, then a smaller output budget.
+    // The free tier refuses large max_tokens once its daily allowance is spent,
+    // so shrinking the request is often enough to still get real model output.
+    const ladder = [
+      { models: OPENROUTER_FREE_MODELS, max_tokens: want },
+      { models: OPENROUTER_FALLBACK_MODELS, max_tokens: Math.min(want, 512) },
+      { models: OPENROUTER_FREE_MODELS, max_tokens: 256 },
+    ];
+
+    let lastError: Error | undefined;
+
+    for (const attempt of ladder) {
+      const remaining = deadline - Date.now();
+      if (remaining < 4000) break; // not enough budget left for a useful try
+
+      const controller = new AbortController();
+      const timeout = setTimeout(
+        () => controller.abort(),
+        Math.min(remaining, Math.max(7000, Math.floor(this.timeoutMs / ladder.length)))
       );
 
-      return {
-        id: data.id || `chatcmpl-moltworld-${Date.now()}`,
-        object: "chat.completion",
-        created: data.created || Math.floor(Date.now() / 1000),
-        model: modelSlug,
-        choices: (data.choices || []).map((choice: any, idx: number) => ({
+      try {
+        const data = await this.callOpenRouterFree(
+          {
+            models: attempt.models,
+            messages: request.messages,
+            temperature: request.temperature ?? 0.7,
+            max_tokens: attempt.max_tokens,
+          },
+          controller.signal
+        );
+
+        const choices = (data.choices || []).map((choice: any, idx: number) => ({
           index: choice.index ?? idx,
           message: {
             role: choice.message?.role || "assistant",
             content: choice.message?.content || choice.message?.reasoning || "",
           },
           finish_reason: choice.finish_reason || "stop",
-        })),
-        usage: data.usage
-          ? {
-              prompt_tokens: data.usage.prompt_tokens || 0,
-              completion_tokens: data.usage.completion_tokens || 0,
-              total_tokens: data.usage.total_tokens || 0,
-            }
-          : undefined,
-      };
-    } catch (err: any) {
-      if (err.name === "AbortError") {
-        throw new Error("Upstream AI model request timed out.");
+        }));
+
+        // Some free models answer 200 with an empty body; that is not a usable
+        // result for a paid request, so fall through to the next rung.
+        if (!choices.length || !choices[0].message.content.trim()) {
+          lastError = new Error("Upstream returned an empty completion.");
+          continue;
+        }
+
+        return {
+          id: data.id || `chatcmpl-moltworld-${Date.now()}`,
+          object: "chat.completion",
+          created: data.created || Math.floor(Date.now() / 1000),
+          model: modelSlug,
+          choices,
+          usage: data.usage
+            ? {
+                prompt_tokens: data.usage.prompt_tokens || 0,
+                completion_tokens: data.usage.completion_tokens || 0,
+                total_tokens: data.usage.total_tokens || 0,
+              }
+            : undefined,
+        };
+      } catch (err: any) {
+        lastError = err?.name === "AbortError"
+          ? new Error("Upstream AI model request timed out.")
+          : err;
+      } finally {
+        clearTimeout(timeout);
       }
-      throw err;
-    } finally {
-      clearTimeout(timeout);
     }
+
+    // Every rung failed. Return a well-formed response that states plainly that
+    // no model output was produced, rather than inventing an answer — the caller
+    // paid for this request and must be able to tell a real completion from a
+    // degraded one.
+    return buildChatFallbackResponse(modelSlug, request, lastError);
   }
 
   async generateImage(
