@@ -34,6 +34,19 @@ export function getModelEndpoint(model: ModelDefinition): string {
   }
 }
 
+export function getModelDiscoveryDescription(model: ModelDefinition): string {
+  switch (model.modality) {
+    case "chat":
+      return `Send chat messages to ${model.displayName} and receive a JSON assistant reply with completion choices.`;
+    case "image":
+      return `Send a text prompt to ${model.displayName} and receive generated image URLs or base64 image data in JSON.`;
+    case "voice":
+      return `Send text to ${model.displayName} and receive a JSON speech result with an audio URL and format.`;
+    case "video":
+      return `Send a text prompt to ${model.displayName} and receive a JSON video result with a video URL, status, and duration.`;
+  }
+}
+
 export const INITIAL_MODELS: ModelDefinition[] = [
   // ----------------------------------------------------
   // Chat Models

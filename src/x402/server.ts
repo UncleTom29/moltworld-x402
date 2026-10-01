@@ -16,7 +16,7 @@ import {
   ALGORAND_MAINNET_FACILITATOR_CAIP2,
   ALGORAND_MAINNET_CANONICAL_CAIP2,
 } from "../config.js";
-import { ModelRegistry, defaultModelRegistry, getModelEndpoint, ModelDefinition } from "../models/registry.js";
+import { ModelRegistry, defaultModelRegistry, getModelEndpoint, getModelDiscoveryDescription, ModelDefinition } from "../models/registry.js";
 
 export function createX402Server(): {
   server: x402ResourceServer;
@@ -208,7 +208,7 @@ export function buildX402Routes(registry: ModelRegistry): RoutesConfig {
           tag: "x402-global-challenge",
         },
       },
-      description: model.description,
+      description: getModelDiscoveryDescription(model),
       mimeType: "application/json",
       extensions: {
         ...buildDiscoveryExtensionForModel(model),

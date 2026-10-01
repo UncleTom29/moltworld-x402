@@ -1,6 +1,6 @@
 import { Context } from "hono";
 import { config } from "../config.js";
-import { defaultModelRegistry, getModelEndpoint } from "../models/registry.js";
+import { defaultModelRegistry, getModelEndpoint, getModelDiscoveryDescription } from "../models/registry.js";
 import { defaultProviderRegistry } from "../providers/index.js";
 import {
   validateChatCompletionRequest,
@@ -85,7 +85,7 @@ export function handleListModels(c: Context): Response {
       max_tokens: m.limits.maxOutputTokens,
       max_input_tokens: m.limits.maxInputTokens,
       max_duration_seconds: m.limits.maxDurationSeconds,
-      description: m.description,
+      description: getModelDiscoveryDescription(m),
       tags: m.tags || [],
     })),
   });

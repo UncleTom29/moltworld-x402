@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeAll } from "vitest";
 import { app, init } from "../src/app.js";
 import { config, USDC_TESTNET_ASA_ID } from "../src/config.js";
-import { defaultModelRegistry } from "../src/models/registry.js";
+import { defaultModelRegistry, getModelEndpoint, getModelDiscoveryDescription } from "../src/models/registry.js";
 import {
   validateChatCompletionRequest,
   validateImageRequest,
@@ -28,6 +28,36 @@ describe("Moltworld x402 Gateway - Free Routes & Modality Filtering", () => {
     expect(html).toContain("/logo.png");
     expect(html).toContain("/favicon.png");
     expect(html).toContain("/favicon.ico");
+    expect(html).toContain(`content="${config.publicDomain}/"`);
+    expect(html).toContain('href="/llms.txt"');
+  });
+
+  it("GET /llms.txt publishes current Algorand payment context and every enabled route", async () => {
+    const res = await app.fetch(new Request("http://localhost/llms.txt"));
+    expect(res.status).toBe(200);
+    expect(res.headers.get("content-type")).toContain("text/plain");
+    expect(res.headers.get("cache-control")).toContain("max-age=300");
+
+    const body = await res.text();
+    expect(body).toContain("# Moltworld — Multimodal AI Gateway with x402 on Algorand");
+    expect(body).toContain(`${config.publicDomain}/logo.png`);
+    expect(body).toContain(`Merchant payTo address: ${config.payToAddress}`);
+    expect(body).toContain(`ASA ${config.usdcAsaId}`);
+    expect(body).toContain(config.networkCaip2);
+    expect(body).toContain(config.facilitatorUrl);
+    expect(body).toContain("x402-global-challenge");
+    expect(body).toContain(`${config.publicDomain}/v1/models`);
+    expect(body).toContain("Payment-Required");
+    expect(body).toContain("Payment-Signature");
+
+    const models = defaultModelRegistry.getEnabledModels();
+    const routeLines = body.split("\n").filter((line) => /^- \[.*\]\(.*\/v1\/models\/.*\): POST;/.test(line));
+    expect(routeLines).toHaveLength(models.length);
+    for (const model of models) {
+      expect(body).toContain(
+        `[${model.displayName}](${config.publicDomain}${getModelEndpoint(model)}): POST; ${model.price} USDC per request. ${getModelDiscoveryDescription(model)}`
+      );
+    }
   });
 
   it("serves static logo and favicon assets with valid cache headers", async () => {
@@ -196,6 +226,7 @@ describe("Moltworld x402 Gateway - Payment Gating (HTTP 402) & Fail-Closed Prote
     expect(decoded.extensions.bazaar).toBeDefined();
     expect(decoded.extensions.bazaar.info.input.method).toBe("POST");
     expect(decoded.extensions.bazaar.info.output.type).toBe("json");
+    expect(decoded.resource.description).toBe(getModelDiscoveryDescription(defaultModelRegistry.getModel("gpt")!));
   });
 
   it("POST /v1/models/claude-sonnet/chat/completions returns 402 with $0.006 pricing", async () => {
@@ -520,4 +551,3 @@ describe("Moltworld x402 Gateway - Multimodal Mock Provider Execution", () => {
     }
   });
 });
-

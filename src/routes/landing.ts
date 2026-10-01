@@ -20,7 +20,11 @@ export function renderLandingPage(c: Context): Response {
   <link rel="apple-touch-icon" href="/logo.png">
   <meta property="og:title" content="Moltworld — Multimodal AI Gateway with x402 on Algorand">
   <meta property="og:description" content="One API for AI models and autonomous agents. Chat, Image, Voice, and Video. Pay per request in USDC on Algorand. Zero subscriptions.">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Moltworld">
+  <meta property="og:url" content="${config.publicDomain.replace(/\/+$/, "")}/">
   <meta property="og:image" content="https://moltworld.xyz/logo.png">
+  <link rel="alternate" type="text/plain" title="Moltworld agent guide" href="/llms.txt">
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:image" content="https://moltworld.xyz/logo.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
