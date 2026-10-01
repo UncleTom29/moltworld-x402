@@ -70,6 +70,8 @@ export function handleLlmsTxt(c: Context): Response {
     "",
     `- [Moltworld home](${origin}/): Service overview and logo.`,
     `- [x402 service descriptor](${origin}/.well-known/x402): Machine-readable paid route and payment catalog.`,
+    `- [A2A agent card](${origin}/.well-known/agent-card.json): Working JSON-RPC model discovery agent at ${origin}/a2a.`,
+    `- [MCP server](${origin}/mcp): Model catalog, live payment requirements, and caller-signed paid requests.`,
     `- [Live model catalog](${origin}/v1/models): Enabled models, prices, descriptions, and endpoint paths in JSON.`,
     `- [Service health](${origin}/health): Network, asset, payTo address, and facilitator context.`,
     `- [GoPlausible Bazaar resources](${config.facilitatorUrl}/discovery/resources): Facilitator catalog of settled x402 resources.`,

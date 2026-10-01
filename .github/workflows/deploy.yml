@@ -179,3 +179,16 @@ jobs:
           echo "      curl -sk https://95.111.229.139/health -H 'Host: moltworld.xyz'   # origin"
           echo "      curl -s  https://moltworld.xyz/health                             # edge"
           exit 1
+
+      - name: Verify public A2A and MCP integrations
+        run: |
+          curl -fsS https://moltworld.xyz/.well-known/agent-card.json |
+            node -e "let s='';process.stdin.on('data',c=>s+=c).on('end',()=>{const x=JSON.parse(s);if(x.supportedInterfaces?.[0]?.url!=='https://moltworld.xyz/a2a')process.exit(1)})"
+          curl -fsS https://moltworld.xyz/a2a \
+            -H 'Content-Type: application/json' -H 'A2A-Version: 1.0' \
+            --data '{"jsonrpc":"2.0","id":1,"method":"SendMessage","params":{"message":{"messageId":"deploy-check","role":"ROLE_USER","parts":[{"text":"list image models","mediaType":"text/plain"}]}}}' |
+            node -e "let s='';process.stdin.on('data',c=>s+=c).on('end',()=>{const x=JSON.parse(s);if(!x.result?.message?.parts?.[0]?.text?.includes('image'))process.exit(1)})"
+          curl -fsS https://moltworld.xyz/mcp \
+            -H 'Content-Type: application/json' -H 'Accept: application/json, text/event-stream' \
+            --data '{"jsonrpc":"2.0","id":1,"method":"tools/list"}' |
+            node -e "let s='';process.stdin.on('data',c=>s+=c).on('end',()=>{if(!s.includes('submit_signed_request')||!s.includes('get_payment_requirements'))process.exit(1)})"

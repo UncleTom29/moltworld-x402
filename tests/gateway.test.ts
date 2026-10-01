@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeAll } from "vitest";
+import { describe, it, expect, beforeAll, vi } from "vitest";
 import { app, init } from "../src/app.js";
 import { config, USDC_TESTNET_ASA_ID } from "../src/config.js";
 import { defaultModelRegistry, getModelEndpoint, getModelDiscoveryDescription } from "../src/models/registry.js";
@@ -14,6 +14,52 @@ beforeAll(async () => {
 }, 30000);
 
 describe("Moltworld x402 Gateway - Free Routes & Modality Filtering", () => {
+  it("serves a working A2A agent card and answers a JSON-RPC model query", async () => {
+    const cardResponse = await app.fetch(new Request("http://localhost/.well-known/agent-card.json"));
+    expect(cardResponse.status).toBe(200);
+    const card = await cardResponse.json() as any;
+    expect(card.supportedInterfaces[0].url).toBe(`${config.publicDomain}/a2a`);
+    expect(card.supportedInterfaces[0].protocolBinding).toBe("JSONRPC");
+    expect(card.skills[0].id).toBe("find_models");
+
+    const response = await app.fetch(new Request("http://localhost/a2a", {
+      method: "POST", headers: { "Content-Type": "application/json", "A2A-Version": "1.0" },
+      body: JSON.stringify({ jsonrpc: "2.0", id: 1, method: "SendMessage", params: {
+        message: { messageId: "test-message", role: "ROLE_USER", parts: [{ text: "cheapest image model", mediaType: "text/plain" }] },
+      } }),
+    }));
+    expect(response.status).toBe(200);
+    const result = await response.json() as any;
+    expect(result.result.message.parts[0].text).toContain("recraft-v4.1-flash");
+    expect(result.result.message.parts[0].text).toContain(config.publicDomain);
+  });
+
+  it("serves an MCP catalog and forwards caller-signed requests through the paid endpoint", async () => {
+    const call = async (method: string, params?: any) => {
+      const response = await app.fetch(new Request("http://localhost/mcp", {
+        method: "POST", headers: { Host: "localhost", "Content-Type": "application/json", Accept: "application/json, text/event-stream" },
+        body: JSON.stringify({ jsonrpc: "2.0", id: 1, method, params }),
+      }));
+      expect(response.status).toBe(200);
+      const text = await response.text();
+      return JSON.parse(text.match(/^data: (.+)$/m)![1]);
+    };
+    const listed = await call("tools/list");
+    expect(listed.result.tools.map((tool: any) => tool.name)).toEqual(["list_models", "get_payment_requirements", "submit_signed_request"]);
+    const models = await call("tools/call", { name: "list_models", arguments: { modality: "image" } });
+    expect(JSON.parse(models.result.content[0].text)).toHaveLength(6);
+
+    const fetchMock = vi.spyOn(globalThis, "fetch").mockResolvedValueOnce(new Response("paid result", { status: 200, headers: { "Payment-Response": "settlement" } }));
+    try {
+      const submitted = await call("tools/call", { name: "submit_signed_request", arguments: {
+        model: "gpt", body: { messages: [{ role: "user", content: "Hello" }] }, paymentSignature: "caller-signed-payload",
+      } });
+      expect(submitted.result.isError).toBeFalsy();
+      expect(fetchMock).toHaveBeenCalledWith(`${config.publicDomain}/v1/models/gpt/chat/completions`, expect.objectContaining({
+        method: "POST", headers: expect.objectContaining({ "Payment-Signature": "caller-signed-payload" }),
+      }));
+    } finally { fetchMock.mockRestore(); }
+  });
   it("GET / returns 200 OK with polished landing page HTML", async () => {
     const res = await app.fetch(new Request("http://localhost/"));
     expect(res.status).toBe(200);

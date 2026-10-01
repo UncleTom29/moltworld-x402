@@ -26,6 +26,7 @@ export function renderLandingPage(c: Context): Response {
   <meta property="og:image" content="https://moltworld.xyz/logo.png">
   <link rel="alternate" type="text/plain" title="Moltworld agent guide" href="/llms.txt">
   <link rel="alternate" type="application/json" title="Moltworld x402 service descriptor" href="/.well-known/x402">
+  <link rel="alternate" type="application/json" title="Moltworld A2A agent card" href="/.well-known/agent-card.json">
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:image" content="https://moltworld.xyz/logo.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">

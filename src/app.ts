@@ -11,6 +11,8 @@ import {
 } from "./middleware/security.js";
 import { renderLandingPage } from "./routes/landing.js";
 import { handleLlmsTxt, handleX402Discovery } from "./routes/metadata.js";
+import { getAgentCard, handleA2a } from "./routes/a2a.js";
+import { handleMcp } from "./routes/mcp.js";
 import {
   handleHealth,
   handleListModels,
@@ -67,6 +69,9 @@ export function createApp(): {
   app.use("/v1/models", rateLimitFreeRoutesMiddleware);
   app.use("/llms.txt", rateLimitFreeRoutesMiddleware);
   app.use("/.well-known/x402", rateLimitFreeRoutesMiddleware);
+  app.use("/.well-known/agent-card.json", rateLimitFreeRoutesMiddleware);
+  app.use("/a2a", rateLimitFreeRoutesMiddleware);
+  app.use("/mcp", rateLimitFreeRoutesMiddleware);
 
   // Free Endpoints
   app.get("/", renderLandingPage);
@@ -74,6 +79,9 @@ export function createApp(): {
   app.get("/v1/models", handleListModels);
   app.get("/llms.txt", handleLlmsTxt);
   app.get("/.well-known/x402", handleX402Discovery);
+  app.get("/.well-known/agent-card.json", (c) => c.json(getAgentCard(), 200, { "Cache-Control": "public, max-age=300" }));
+  app.post("/a2a", (c) => handleA2a(c.req.raw));
+  app.all("/mcp", (c) => handleMcp(c.req.raw));
 
   // Static brand assets (Logo & Favicon)
   app.get("/logo.png", () => {
