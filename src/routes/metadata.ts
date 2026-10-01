@@ -5,17 +5,55 @@ import { defaultModelRegistry, getModelEndpoint, getModelDiscoveryDescription } 
 const SITE_TITLE = "Moltworld — Multimodal AI Gateway with x402 on Algorand";
 const SITE_DESCRIPTION =
   "One API for AI models and autonomous agents. Chat, image, voice, and video requests are paid per call in USDC on Algorand.";
+const SERVICE_TAGS = ["moltworld", "ai-inference", "algorand", "x402", "x402-global-challenge"];
+
+function siteUrl(): string {
+  return config.publicDomain.replace(/\/+$/, "");
+}
+
+function microUsdc(price: string): string {
+  const match = /^\$(\d+)(?:\.(\d{1,6}))?$/.exec(price);
+  if (!match) throw new Error(`Invalid USDC price: ${price}`);
+  return (BigInt(match[1]) * 1_000_000n + BigInt((match[2] || "").padEnd(6, "0"))).toString();
+}
+
+export function handleX402Discovery(c: Context): Response {
+  const origin = siteUrl();
+  return c.json(
+    {
+      x402Version: 2,
+      name: SITE_TITLE,
+      description: SITE_DESCRIPTION,
+      website: origin,
+      logo: `${origin}/logo.png`,
+      image: `${origin}/logo.png`,
+      tags: SERVICE_TAGS,
+      resources: defaultModelRegistry.getEnabledModels().map((model) => ({
+        url: `${origin}${getModelEndpoint(model)}`,
+        method: "POST",
+        description: getModelDiscoveryDescription(model),
+        network: config.networkCaip2,
+        asset: config.usdcAsaId,
+        amount: microUsdc(model.price),
+        payTo: config.payToAddress,
+        tags: [...SERVICE_TAGS, model.modality],
+      })),
+    },
+    200,
+    { "Cache-Control": "public, max-age=300" }
+  );
+}
 
 export function handleLlmsTxt(c: Context): Response {
-  const siteUrl = config.publicDomain.replace(/\/+$/, "");
+  const origin = siteUrl();
   const network = config.isMainnet ? "Algorand Mainnet" : "Algorand Testnet";
   const lines = [
     `# ${SITE_TITLE}`,
     "",
     `> ${SITE_DESCRIPTION}`,
     "",
-    `Site: ${siteUrl}/`,
-    `Logo: ${siteUrl}/logo.png`,
+    `Site: ${origin}/`,
+    `Logo: ${origin}/logo.png`,
     `Merchant payTo address: ${config.payToAddress}`,
     `Payment: x402 exact scheme; USDC on ${network} (ASA ${config.usdcAsaId}; network ${config.networkCaip2}).`,
     `Facilitator: ${config.facilitatorUrl} (GoPlausible).`,
@@ -30,9 +68,10 @@ export function handleLlmsTxt(c: Context): Response {
     "",
     "## Discovery and service links",
     "",
-    `- [Moltworld home](${siteUrl}/): Service overview and logo.`,
-    `- [Live model catalog](${siteUrl}/v1/models): Enabled models, prices, descriptions, and endpoint paths in JSON.`,
-    `- [Service health](${siteUrl}/health): Network, asset, payTo address, and facilitator context.`,
+    `- [Moltworld home](${origin}/): Service overview and logo.`,
+    `- [x402 service descriptor](${origin}/.well-known/x402): Machine-readable paid route and payment catalog.`,
+    `- [Live model catalog](${origin}/v1/models): Enabled models, prices, descriptions, and endpoint paths in JSON.`,
+    `- [Service health](${origin}/health): Network, asset, payTo address, and facilitator context.`,
     `- [GoPlausible Bazaar resources](${config.facilitatorUrl}/discovery/resources): Facilitator catalog of settled x402 resources.`,
     `- [GoPlausible Bazaar merchants](${config.facilitatorUrl}/discovery/merchants): Facilitator merchant catalog; find the payTo address above.`,
     "",
@@ -45,7 +84,7 @@ export function handleLlmsTxt(c: Context): Response {
     lines.push(`### ${modality[0].toUpperCase()}${modality.slice(1)}`, "");
     for (const model of models) {
       lines.push(
-        `- [${model.displayName}](${siteUrl}${getModelEndpoint(model)}): POST; ${model.price} USDC per request. ${getModelDiscoveryDescription(model)}`
+        `- [${model.displayName}](${origin}${getModelEndpoint(model)}): POST; ${model.price} USDC per request. ${getModelDiscoveryDescription(model)}`
       );
     }
     lines.push("");

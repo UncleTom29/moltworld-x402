@@ -30,6 +30,7 @@ describe("Moltworld x402 Gateway - Free Routes & Modality Filtering", () => {
     expect(html).toContain("/favicon.ico");
     expect(html).toContain(`content="${config.publicDomain}/"`);
     expect(html).toContain('href="/llms.txt"');
+    expect(html).toContain('href="/.well-known/x402"');
   });
 
   it("GET /llms.txt publishes current Algorand payment context and every enabled route", async () => {
@@ -47,6 +48,7 @@ describe("Moltworld x402 Gateway - Free Routes & Modality Filtering", () => {
     expect(body).toContain(config.facilitatorUrl);
     expect(body).toContain("x402-global-challenge");
     expect(body).toContain(`${config.publicDomain}/v1/models`);
+    expect(body).toContain(`${config.publicDomain}/.well-known/x402`);
     expect(body).toContain("Payment-Required");
     expect(body).toContain("Payment-Signature");
 
@@ -58,6 +60,43 @@ describe("Moltworld x402 Gateway - Free Routes & Modality Filtering", () => {
         `[${model.displayName}](${config.publicDomain}${getModelEndpoint(model)}): POST; ${model.price} USDC per request. ${getModelDiscoveryDescription(model)}`
       );
     }
+  });
+
+  it("GET /.well-known/x402 describes the live paid routes without changing their 402 terms", async () => {
+    const res = await app.fetch(new Request("http://localhost/.well-known/x402"));
+    expect(res.status).toBe(200);
+    expect(res.headers.get("content-type")).toContain("application/json");
+    const body = (await res.json()) as any;
+    expect(body.x402Version).toBe(2);
+    expect(body.website).toBe(config.publicDomain);
+    expect(body.logo).toBe(`${config.publicDomain}/logo.png`);
+    expect(body.tags).toContain("x402-global-challenge");
+    expect(body.resources).toHaveLength(defaultModelRegistry.getEnabledModels().length);
+
+    for (const model of defaultModelRegistry.getEnabledModels()) {
+      const resource = body.resources.find((item: any) => item.url === `${config.publicDomain}${getModelEndpoint(model)}`);
+      expect(resource).toBeDefined();
+      expect(resource.method).toBe("POST");
+      expect(resource.description).toBe(getModelDiscoveryDescription(model));
+      expect(resource.network).toBe(config.networkCaip2);
+      expect(resource.asset).toBe(config.usdcAsaId);
+      expect(resource.payTo).toBe(config.payToAddress);
+      expect(resource.tags).toContain(model.modality);
+    }
+
+    const gpt = body.resources.find((item: any) => item.url.endsWith("/gpt/chat/completions"));
+    expect(gpt.amount).toBe("3000");
+    const unpaid = await app.fetch(new Request("http://localhost/v1/models/gpt/chat/completions", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ messages: [{ role: "user", content: "Hello" }] }),
+    }));
+    expect(unpaid.status).toBe(402);
+    const challenge = JSON.parse(Buffer.from(unpaid.headers.get("payment-required")!, "base64").toString("utf8"));
+    expect(challenge.accepts[0].amount).toBe(gpt.amount);
+    expect(challenge.accepts[0].payTo).toBe(gpt.payTo);
+    expect(challenge.accepts[0].extra.asset).toBe(gpt.asset);
+    expect(challenge.accepts[0].extra.tag).toBe("x402-global-challenge");
   });
 
   it("serves static logo and favicon assets with valid cache headers", async () => {

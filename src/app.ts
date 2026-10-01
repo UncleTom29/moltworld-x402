@@ -10,7 +10,7 @@ import {
   safeErrorHandler,
 } from "./middleware/security.js";
 import { renderLandingPage } from "./routes/landing.js";
-import { handleLlmsTxt } from "./routes/metadata.js";
+import { handleLlmsTxt, handleX402Discovery } from "./routes/metadata.js";
 import {
   handleHealth,
   handleListModels,
@@ -66,12 +66,14 @@ export function createApp(): {
   app.use("/health", rateLimitFreeRoutesMiddleware);
   app.use("/v1/models", rateLimitFreeRoutesMiddleware);
   app.use("/llms.txt", rateLimitFreeRoutesMiddleware);
+  app.use("/.well-known/x402", rateLimitFreeRoutesMiddleware);
 
   // Free Endpoints
   app.get("/", renderLandingPage);
   app.get("/health", handleHealth);
   app.get("/v1/models", handleListModels);
   app.get("/llms.txt", handleLlmsTxt);
+  app.get("/.well-known/x402", handleX402Discovery);
 
   // Static brand assets (Logo & Favicon)
   app.get("/logo.png", () => {
