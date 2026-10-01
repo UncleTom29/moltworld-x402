@@ -192,3 +192,7 @@ jobs:
             -H 'Content-Type: application/json' -H 'Accept: application/json, text/event-stream' \
             --data '{"jsonrpc":"2.0","id":1,"method":"tools/list"}' |
             node -e "let s='';process.stdin.on('data',c=>s+=c).on('end',()=>{if(!s.includes('submit_signed_request')||!s.includes('get_payment_requirements'))process.exit(1)})"
+          curl -fsS https://moltworld.xyz/mcp \
+            -H 'Content-Type: application/json' -H 'Accept: application/json, text/event-stream' \
+            --data '{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"get_payment_requirements","arguments":{"model":"gpt"}}}' |
+            node -e "let s='';process.stdin.on('data',c=>s+=c).on('end',()=>{const x=JSON.parse(s.split('data: ')[1].split('\n')[0]);const q=JSON.parse(x.result.content[0].text);if(q.status!==402||!q.paymentRequired)process.exit(1)})"

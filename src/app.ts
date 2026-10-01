@@ -12,7 +12,7 @@ import {
 import { renderLandingPage } from "./routes/landing.js";
 import { handleLlmsTxt, handleX402Discovery } from "./routes/metadata.js";
 import { getAgentCard, handleA2a } from "./routes/a2a.js";
-import { handleMcp } from "./routes/mcp.js";
+import { createMcpRoute } from "./routes/mcp.js";
 import {
   handleHealth,
   handleListModels,
@@ -31,6 +31,7 @@ export function createApp(): {
 } {
   const app = new Hono();
   const { server, routes } = createX402Server();
+  const handleMcp = createMcpRoute(async (request) => app.fetch(request));
 
   // Global Error Handler
   app.onError(safeErrorHandler);

@@ -5,6 +5,7 @@ import { defaultModelRegistry, getModelDiscoveryDescription, getModelEndpoint } 
 
 const origin = config.publicDomain.replace(/\/+$/, "");
 
+export function createMcpRoute(gatewayFetch: (request: Request) => Promise<Response>): (request: Request) => Promise<Response> {
 const handler = createMcpHandler(() => {
   const server = new McpServer({ name: "moltworld", version: "1.0.0" });
 
@@ -26,7 +27,7 @@ const handler = createMcpHandler(() => {
     const model = defaultModelRegistry.getModel(slug);
     if (!model?.enabled) return { isError: true, content: [{ type: "text", text: "Unknown or disabled model." }] };
     const endpoint = `${origin}${getModelEndpoint(model)}`;
-    const response = await fetch(endpoint, { method: "POST", headers: { "Content-Type": "application/json" }, body: "{}" });
+    const response = await gatewayFetch(new Request(endpoint, { method: "POST", headers: { "Content-Type": "application/json" }, body: "{}" }));
     return { content: [{ type: "text", text: JSON.stringify({ endpoint, status: response.status,
       paymentRequired: response.headers.get("Payment-Required"), priceUsdc: model.price,
       network: config.networkCaip2, asset: config.usdcAsaId, payTo: config.payToAddress }) }] };
@@ -39,9 +40,9 @@ const handler = createMcpHandler(() => {
     const model = defaultModelRegistry.getModel(slug);
     if (!model?.enabled) return { isError: true, content: [{ type: "text", text: "Unknown or disabled model." }] };
     const endpoint = `${origin}${getModelEndpoint(model)}`;
-    const response = await fetch(endpoint, { method: "POST", headers: {
+    const response = await gatewayFetch(new Request(endpoint, { method: "POST", headers: {
       "Content-Type": "application/json", "Payment-Signature": paymentSignature,
-    }, body: JSON.stringify(body) });
+    }, body: JSON.stringify(body) }));
     const result = await response.text();
     return { isError: !response.ok, content: [{ type: "text", text: JSON.stringify({
       status: response.status, body: result.slice(0, 100_000),
@@ -53,8 +54,9 @@ const handler = createMcpHandler(() => {
   return server;
 });
 
-export function handleMcp(request: Request): Promise<Response> {
+return function handleMcp(request: Request): Promise<Response> {
   const hostname = new URL(origin).hostname;
   const rejected = hostHeaderValidationResponse(request, [hostname, "localhost", "127.0.0.1"]);
   return rejected ? Promise.resolve(rejected) : handler.fetch(request);
+}
 }

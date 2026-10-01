@@ -2,6 +2,7 @@ import { describe, it, expect, beforeAll, vi } from "vitest";
 import { app, init } from "../src/app.js";
 import { config, USDC_TESTNET_ASA_ID } from "../src/config.js";
 import { defaultModelRegistry, getModelEndpoint, getModelDiscoveryDescription } from "../src/models/registry.js";
+import { createMcpRoute } from "../src/routes/mcp.js";
 import {
   validateChatCompletionRequest,
   validateImageRequest,
@@ -49,15 +50,26 @@ describe("Moltworld x402 Gateway - Free Routes & Modality Filtering", () => {
     const models = await call("tools/call", { name: "list_models", arguments: { modality: "image" } });
     expect(JSON.parse(models.result.content[0].text)).toHaveLength(6);
 
+    const quote = await call("tools/call", { name: "get_payment_requirements", arguments: { model: "gpt" } });
+    const terms = JSON.parse(quote.result.content[0].text);
+    expect(terms.status).toBe(402);
+    expect(terms.paymentRequired).toBeTruthy();
+    expect(terms.asset).toBe(config.usdcAsaId);
+
     const fetchMock = vi.spyOn(globalThis, "fetch").mockResolvedValueOnce(new Response("paid result", { status: 200, headers: { "Payment-Response": "settlement" } }));
     try {
-      const submitted = await call("tools/call", { name: "submit_signed_request", arguments: {
-        model: "gpt", body: { messages: [{ role: "user", content: "Hello" }] }, paymentSignature: "caller-signed-payload",
-      } });
-      expect(submitted.result.isError).toBeFalsy();
-      expect(fetchMock).toHaveBeenCalledWith(`${config.publicDomain}/v1/models/gpt/chat/completions`, expect.objectContaining({
-        method: "POST", headers: expect.objectContaining({ "Payment-Signature": "caller-signed-payload" }),
+      const isolatedMcp = createMcpRoute(async (request) => fetch(request));
+      const response = await isolatedMcp(new Request("http://localhost/mcp", {
+        method: "POST", headers: { Host: "localhost", "Content-Type": "application/json", Accept: "application/json, text/event-stream" },
+        body: JSON.stringify({ jsonrpc: "2.0", id: 2, method: "tools/call", params: { name: "submit_signed_request", arguments: {
+          model: "gpt", body: { messages: [{ role: "user", content: "Hello" }] }, paymentSignature: "caller-signed-payload",
+        } } }),
       }));
+      const submitted = JSON.parse((await response.text()).match(/^data: (.+)$/m)![1]);
+      expect(submitted.result.isError).toBeFalsy();
+      const paidRequest = fetchMock.mock.calls[0][0] as Request;
+      expect(paidRequest.url).toBe(`${config.publicDomain}/v1/models/gpt/chat/completions`);
+      expect(paidRequest.headers.get("Payment-Signature")).toBe("caller-signed-payload");
     } finally { fetchMock.mockRestore(); }
   });
   it("GET / returns 200 OK with polished landing page HTML", async () => {
