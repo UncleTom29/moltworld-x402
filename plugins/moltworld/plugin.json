@@ -1,0 +1,28 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "moltworld",
+  "version": "0.1.0",
+  "description": "Discover Moltworld AI models and Algorand x402 payment terms through a live MCP server.",
+  "author": {
+    "name": "Moltworld",
+    "url": "https://moltworld.xyz"
+  },
+  "homepage": "https://moltworld.xyz/llms.txt",
+  "repository": "https://github.com/UncleTom29/moltworld-x402",
+  "license": "ISC",
+  "keywords": ["algorand", "x402", "mcp", "ai-models"],
+  "extensions": {
+    "com.openai": {
+      "interface": {
+        "displayName": "Moltworld",
+        "shortDescription": "Find AI models and x402 payment terms.",
+        "longDescription": "Search Moltworld's live multimodal AI catalog, inspect Algorand USDC x402 payment requirements, and submit caller-signed model requests.",
+        "developerName": "Moltworld",
+        "category": "Productivity",
+        "capabilities": [],
+        "websiteURL": "https://moltworld.xyz",
+        "defaultPrompt": "Find a Moltworld model for my task and show its Algorand USDC price before I authorize payment."
+      }
+    }
+  }
+}

@@ -1,6 +1,7 @@
 # Moltworld Codex plugin
 
-This package connects Codex to Moltworld's remote MCP server at `https://moltworld.xyz/mcp`.
+This portable package connects ChatGPT and Codex to Moltworld's remote MCP server at
+`https://moltworld.xyz/mcp`. The `.codex-plugin` manifest is retained for Codex compatibility.
 It offers three tools: `list_models`, `get_payment_requirements`, and `submit_signed_request`.
 The tools read the live model registry and x402 challenge. A paid model request requires a
 `Payment-Signature` created and authorized by the caller's Algorand USDC wallet. The plugin
